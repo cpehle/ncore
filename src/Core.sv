@@ -4,23 +4,21 @@
 `include "Bundle.sv"
 module Core(input clk,
             input  reset,
-            input  Bundle::MemoryOut imem_in,
-            output Bundle::MemoryIn imem_out,
-            input  Bundle::MemoryOut dmem_in,
-            output Bundle::MemoryIn dmem_out
+            input  Bundle::MemoryOut imem_out,
+            output Bundle::MemoryIn imem_in,
+            input  Bundle::MemoryOut dmem_out,
+            output Bundle::MemoryIn dmem_in
             );
 
    Bundle::ControlToData ctl;
    Bundle::DataToControl dat;
    /*AUTOWIRE*/
-
    ControlPath c(/*AUTOINST*/
                  // Interfaces
                  .ctl                   (ctl),
                  .dat                   (dat),
-                 .imem_in               (imem_in),
                  .imem_out              (imem_out),
-                 .dmem_in               (dmem_in),
+                 .imem_in               (imem_in),
                  .dmem_out              (dmem_out),
                  // Inputs
                  .clk                   (clk),

@@ -76,6 +76,24 @@ package Bundle;
    } ControlToData;
 
    typedef struct packed {
+      Op1Sel op1_sel;
+      Op2Sel op2_sel;
+      logic [4:0] es_wb_addr;
+      logic [4:0] ms_wb_addr;
+      logic [4:0] wbs_wb_addr;
+      logic [31:0] alu_out;
+      logic [31:0] wb_data;
+      logic [31:0] rs1_data;
+      logic [31:0] rs2_data;
+   } BypassIn;
+
+   typedef struct packed {
+      logic [31:0] alu_op1;
+      logic [31:0] alu_op2;
+   } BypassOut;
+
+
+   typedef struct packed {
       logic [31:0] dec_inst;
       logic        exe_br_eq;
       logic        exe_br_lt;

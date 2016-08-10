@@ -114,6 +114,15 @@ module DataPath(
            .alu_in                      (alu_in),
            .alu_out                     (alu_out));
 
+   Bundle::BypassIn bp_in;
+   Bundle::BypassOut bp_out;
+   Bypass bp(/*AUTOINST*/
+             // Interfaces
+             .bp_in                     (bp_in),
+             .bp_out                    (bp_out));
+
+
+
    always_comb begin
       rn = r;
       // instruction fetch state
@@ -152,7 +161,7 @@ module DataPath(
       dec.op1_data = (ctl.op1_sel == Bundle::OP1_IMZ) ? '0 : // TODO(Christian) : immediate
                      (ctl.op1_sel == Bundle::OP1_PC) ? r.ids.pc :
                      (r.es.wb_addr == dec.rs1_addr && r.es.ctrl_rf_wen) ? exe.alu_out :
-                     // (r.ms.wb_addr == dec.rs1_addr && r.ms.ctrl_rf_wen) ? r.ms.mem_wbdata :
+//                     (r.ms.wb_addr == dec.rs1_addr && r.ms.ctrl_rf_wen) ? r.ms.mem_wbdata :
                      (r.wbs.wb_addr == dec.rs1_addr && r.wbs.ctrl_rf_wen) ? r.wbs.wb_data :  rf_out.rs1_data;
 
       dec.op2_data = (r.es.wb_addr == dec.rs2_addr) && r.es.ctrl_rf_wen && ctl.op2_sel == Bundle::OP2_RS2 ? alu_out.data :

@@ -16,9 +16,26 @@ namespace DutCore {
                         for (int clk = 0; clk < 2; clk++) {
                                 tfp->dump(2*i+clk);
                                 core->clk = !core->clk;
+
+                                // service instruction memory requests
+                                uint32_t iaddr = core->imem_in_req_addr;
+                                core->imem_out_req_ready = 1;
+                                if (core->imem_in_req_valid) {
+                                        core->imem_out_res_data = m.instruction_memory[iaddr];
+                                        core->imem_out_res_valid = 1;
+                                }
+
+                                // service data memory requests
+                                uint32_t daddr = core->dmem_in_req_addr;
+                                core->dmem_out_req_ready = 1;
+                                if (core->dmem_in_req_valid) {
+                                        core->dmem_out_res_data = m.data_memory[daddr];
+                                        core->dmem_out_res_valid = 1;
+                                }
+
+                                core->eval();
                         }
-                        uint32_t iaddr = core->imem_in_req_addr;
-                        core->eval();
+
                 }
         }
 }
@@ -39,6 +56,11 @@ int main(int argc, char** argv) {
                 instruction_memory,
                 data_memory
         };
+
+        for (int i = 0; i < 10000; i++) {
+                m.instruction_memory.push_back(i);
+                m.data_memory.push_back(0x0);
+        }
 
         simulate(core, m, 1000, tfp);
         tfp->close();

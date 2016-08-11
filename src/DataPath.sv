@@ -133,6 +133,7 @@ module DataPath(
                      // r.exception_target;
       end
       imem_in.req.addr = r.ifs.pc;
+      imem_in.req_valid = 1'b1; // TODO(Christian): Determine when this should actually be valid
       rn.ids.inst = imem_out.res.data;
 
       // decode stage

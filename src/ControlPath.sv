@@ -36,37 +36,52 @@ module ControlPath (
    always_comb begin
       cs = cs_default;
       case (dat.dec_inst) inside
-        // load/store instructions
-        `LBZ: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B};
-        `LBZU: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD, MT_BU};
-        `LBZX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_B};
-        `LBZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_BU};
-        `LHZ: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_H};
-        `LHZU: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_HU};
-        `LHZX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_H};
-        `LHZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_HU};
-        `LWZ: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_W};
-        `LWZU: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_W};
-        `LWZX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_W};
-        `LWZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XRD, MT_W};
-        `STB: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XWR, MT_B};
-        `STBX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XWR, MT_B};
-        `STH: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XWR, MT_H};
-        `STHX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XWR, MT_H};
-        `STW: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XWR, MT_W};
-        `STWX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1, M_XWR, MT_W};
-        // immediate instructions
-        `ADDI: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_ADD, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        `ADDIC: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_ADD, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        `ADDIS: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_ADD, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        `ANDI: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_AND, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        `ANDIS: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_AND, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        `ORI: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_OR, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        `ORIS: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_OR, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        `XORI: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_XOR, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        `XORIS: cs = '{1'b1, BR_N, OP1_RS1, OP2_ITYPE, OEN_1, OEN_0, ALU_XOR, WB_ALU, REN_1, MEN_0, M_X, MT_X};
-        // alu instructions
-        `ADD:  cs = '{1'b1, BR_N, OP1_RS1, OP2_RS2, OEN_1, OEN_1, ALU_ADD, WB_ALU, REN_1, MEN_0, M_X, MT_X};
+        // load/store instructions //TODO
+        `LBZ:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B};
+        `LBZU:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_BU};
+        `LBZX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B};
+        `LBZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_BU};
+        `LHZ:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_H};
+        `LHZU:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_HU};
+        `LHZX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_H};
+        `LHZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_HU};
+        `LWZ:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W};
+        `LWZU:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W};
+        `LWZX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W};
+        `LWZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W};
+        `STB:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_B};
+        `STBX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_B};
+        `STH:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_H};
+        `STHX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_H};
+        `STW:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_W};
+        `STWX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_W};
+        // immediate instructions //TODO
+        `ADDI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ADDIC: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ADDIS: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ANDI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_AND,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ANDIS: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_AND,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ORI:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_OR ,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ORIS:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_OR ,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `XORI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_XOR,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `XORIS: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_XOR,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        // alu instructions //TODO
+        `ADD:    cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ADDC:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ADDZE:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ADDE:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `ADDME:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `SUBF:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `SUBFC:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `SUBFE:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `SUBFZE: cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `SUBFME: cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `MULHW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `MULHWU: cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `MULLW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `DIVW:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `DIVWU:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        `NEG:    cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
         default: cs = cs_default;
       endcase // case (dat.dec_inst)
    end // always_comb
@@ -83,15 +98,17 @@ module ControlPath (
 
    // TODO(Christian): Exception handling
 
-   // Stall logic
-   logic hazard_stall = 1'b0;
-   logic cmiss_stall = 1'b0;
 
+   // decode logic
    logic [4:0] dec_rs1_addr = dat.dec_inst[15:11];
    logic [4:0] dec_rs2_addr = dat.dec_inst[20:16];
    logic [4:0] dec_wb_addr = dat.dec_inst[10:6];
    RegisterOpEn dec_rs1_oen = dec_kill ? OEN_0 : cs.rs1_oen;
    RegisterOpEn dec_rs2_oen = dec_kill ? OEN_0 : cs.rs2_oen;
+
+   // stall logic
+   logic hazard_stall = 1'b0; //TODO
+   logic cmiss_stall = 1'b0; //TODO
 
    typedef struct packed {
       logic [4:0] exe_reg_wbaddr;

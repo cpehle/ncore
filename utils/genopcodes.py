@@ -8,27 +8,27 @@ lines = [x for x in filter(lambda x: False if x == '' else False if x[
 
 
 def i_form(x):
-    return ('{:?<6b}' + 26 * '?').format(x)
+    return ('{:0<6b}' + 26 * '?').format(x)
 
 
 def b_form(x):
-    return ('{:?<6b}' + 26 * '?').format(x)
+    return ('{:0<6b}' + 26 * '?').format(x)
 
 
 def d_form(x):
-    return ('{:?<6b}' + 26 * '?').format(x)
+    return ('{:0<6b}' + 26 * '?').format(x)
 
 
 def x_form(x, y):
-    return ('{:?<6b}' + 15 * '?' + '{:?<10b}?').format(x, y)
+    return ('{:0<6b}' + 15 * '?' + '{:0<10b}?').format(x, y)
 
 
 def xo_form(x, y):
-    return ('{:?<6b}' + 15 * '?' + '?{:?<9b}?').format(x, y)
+    return ('{:0<6b}' + 15 * '?' + '?{:0<9b}?').format(x, y)
 
 
 def xl_form(x, y):
-    return ('{:?<6b}' + 15 * '?' + '{:?<10b}?').format(x, y)
+    return ('{:0<6b}' + 15 * '?' + '{:0<10b}?').format(x, y)
 
 
 print('`ifndef _Instructions\n`define _Instructions\npackage Instructions;')

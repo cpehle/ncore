@@ -1,6 +1,7 @@
 `ifndef _Bundle
 `define _Bundle
 package Bundle;
+
    typedef enum [2:0] {
                        MT_B,
                        MT_BU,
@@ -144,7 +145,9 @@ package Bundle;
 
 
    typedef struct packed {
-      logic       x;
+      AluFun fun;
+      logic [31:0] op1;
+      logic [31:0] op2;
    } AluIn;
 
    typedef struct packed {

@@ -84,7 +84,6 @@ addi dform 14
 addis dform 15
 bc dform 16
 branch dform 18
-bclr dform 19
 rlwimi dform 20
 rlwinm dform 21
 rlwnm dform 23

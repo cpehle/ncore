@@ -12,7 +12,7 @@ module Core(input clk,
 
    Bundle::ControlToData ctl;
    Bundle::DataToControl dat;
-   /*AUTOWIRE*/
+
    ControlPath c(/*AUTOINST*/
                  // Interfaces
                  .ctl                   (ctl),
@@ -23,6 +23,7 @@ module Core(input clk,
                  // Inputs
                  .clk                   (clk),
                  .reset                 (reset));
+
    DataPath d(/*AUTOINST*/
               // Interfaces
               .ctl                      (ctl),

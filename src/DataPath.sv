@@ -14,55 +14,56 @@ module DataPath(
                 input  Bundle::MemoryOut dmem_out
     );
    // datapath is a five stage pipeline.
+   // the following
    typedef struct packed {
       logic [31:0] pc; // program counter
    } InstructionFetchState;
 
    typedef struct packed {
-      logic [31:0] pc; // program counter
+      logic [31:0] pc;   // program counter
       logic [31:0] inst; // instruction
    } InstructionDecodeState;
 
    typedef struct packed {
-      logic [31:0] pc; // program counter
-      logic [31:0] inst; // instruction
-      logic [4:0] wb_addr; // write back address
-      logic [4:0] rs1_addr; // result 1 address
-      logic [4:0] rs2_addr; // result 2 address
-      logic [31:0] op1_data; // operand 1 address
-      logic [31:0] op2_data; // operand 2 address
-      logic [31:0] rs2_data; // result 2 data
-      Bundle::BranchType ctrl_br_type; // control branch type
-      Bundle::Op2Sel ctrl_op2_sel; // control operand 2 select
-      Bundle::AluFun ctrl_alu_fun; // control alu function
-      Bundle::WriteBackSelect ctrl_wb_sel; // control writeback select
-      logic        ctrl_rf_wen; // control register file write enable
-      logic        ctrl_mem_val; // control memory value
+      logic [31:0]              pc;           // program counter
+      logic [31:0]              inst;         // instruction
+      logic [4:0]               wb_addr;      // write back address
+      logic [4:0]               rs1_addr;     // result 1 address
+      logic [4:0]               rs2_addr;     // result 2 address
+      logic [31:0]              op1_data;     // operand 1 address
+      logic [31:0]              op2_data;     // operand 2 address
+      logic [31:0]              rs2_data;     // result 2 data
+      Bundle::BranchType        ctrl_br_type; // control branch type
+      Bundle::Op2Sel            ctrl_op2_sel; // control operand 2 select
+      Bundle::AluFun            ctrl_alu_fun; // control alu function
+      Bundle::WriteBackSelect   ctrl_wb_sel;  // control writeback select
+      logic                     ctrl_rf_wen;  // control register file write enable
+      logic                     ctrl_mem_val; // control memory value
       Bundle::MemoryWriteSignal ctrl_mem_fcn; // control memory function
-      Bundle::MemoryMaskType        ctrl_mem_typ; // control memory type
-      logic        ctrl_csr_cmd; // control condition state register command
+      Bundle::MemoryMaskType    ctrl_mem_typ; // control memory type
+      Bundle::ControlRegisterCommand  ctrl_csr_cmd; // control condition state register command
    } ExecuteState;
 
    typedef struct packed {
-      logic [31:0] pc;
-      logic [31:0] inst;
-      logic [31:0] alu_out;
-      logic [4:0]  wb_addr;
-      logic [4:0]  rs1_addr;
-      logic [4:0]  rs2_addr;
-      logic [31:0]  op1_data;
-      logic [31:0]  op2_data;
-      logic [31:0]  rs2_data;
-      logic         ctrl_rf_wen; // control register file write enable
-      logic         ctrl_mem_val; // control memory value
+      logic [31:0]              pc;
+      logic [31:0]              inst;
+      logic [31:0]              alu_out;
+      logic [4:0]               wb_addr;
+      logic [4:0]               rs1_addr;
+      logic [4:0]               rs2_addr;
+      logic [31:0]              op1_data;     // operand 1 data
+      logic [31:0]              op2_data;     // operand 2 data
+      logic [31:0]              rs2_data;     // result 2 data
+      logic                     ctrl_rf_wen;  // control register file write enable
+      logic                     ctrl_mem_val; // control memory value
       Bundle::MemoryWriteSignal ctrl_mem_fcn; // control memory function
-      Bundle::MemoryMaskType        ctrl_mem_typ; // control memory type
-      Bundle::WriteBackSelect ctrl_wb_sel; // control writeback select
-      logic        ctrl_csr_cmd;
+      Bundle::MemoryMaskType    ctrl_mem_typ; // control memory type
+      Bundle::WriteBackSelect   ctrl_wb_sel;  // control writeback select
+      Bundle::ControlRegisterCommand ctrl_csr_cmd; // control condition state register command
    } MemoryState;
 
    typedef struct packed {
-      logic [4:0] wb_addr;
+      logic [4:0]  wb_addr;
       logic [31:0] wb_data;
       logic        ctrl_rf_wen;
    } WriteBackState;
@@ -70,11 +71,11 @@ module DataPath(
    // This structure captures the whole state of
    // the fixed point facility pipeline.
    typedef struct packed {
-      InstructionFetchState ifs;
+      InstructionFetchState  ifs;
       InstructionDecodeState ids;
-      ExecuteState es;
-      MemoryState ms;
-      WriteBackState wbs;
+      ExecuteState           es;
+      MemoryState            ms;
+      WriteBackState         wbs;
    } DataPathState;
 
 
@@ -84,7 +85,20 @@ module DataPath(
 
    Bundle::RegisterFileIn rf_in;
    Bundle::RegisterFileOut rf_out;
-   RegisterFile rf(/*AUTOINST*/
+   logic [4:0]    dec_rs1_addr;
+   logic [4:0]    dec_rs2_addr;
+
+
+   // register file i/o
+   assign rf_in.rs1_addr = dec_rs1_addr;
+   assign rf_in.rs2_addr = dec_rs2_addr;
+   assign rf_in.waddr = r.wbs.wb_addr;
+   assign rf_in.wdata = r.wbs.wb_data;
+   assign rf_in.we = r.wbs.ctrl_rf_wen;
+   assign rf_rs1_data = rf_out.rs1_data;
+   assign rf_rs2_data = rf_out.rs2_data;
+
+   RegisterFile register_file(/*AUTOINST*/
                    // Interfaces
                    .rf_in               (rf_in),
                    .rf_out              (rf_out),
@@ -98,81 +112,117 @@ module DataPath(
            .alu_in                      (alu_in),
            .alu_out                     (alu_out));
 
+
+   logic [31:0]   exe_brjmp_target = '0;
+   logic [31:0]   exe_jump_reg_target = '0;
+   logic [31:0]   exception_target = '0;
+   logic [31:0]   if_instruction;
+   logic [4:0]    dec_wb_addr;
+   logic [31:0]   dec_alu_op2;
+   logic [31:0]   dec_op1_data;
+   logic [31:0]   dec_op2_data;
+   logic [31:0]   dec_rs2_data;
+   logic [31:0]   mem_wb_data;
+   logic [31:0]   rf_rs1_data;
+   logic [31:0]   rf_rs2_data;
+
+
+   assign exe_brjmp_target = r.es.pc + r.es.op2_data;
+
+   // instruction fetch stage
    always_comb begin
-      logic [4:0] dec_rs1_addr;
-      logic [4:0] dec_rs2_addr;
-
-      // logic [31:0] if_pc_next = '0;
-      // logic [31:0] exe_brjmp_target = '0;
-      logic [31:0] exe_jump_reg_target = '0;
-      logic [31:0] exception_target = '0;
-      logic [31:0] if_instruction;
-      logic [4:0]  dec_wb_addr;
-      // logic        imm_stype;
-      // logic        imm_itype;
-      // logic        imm_sbtype;
-      // logic        imm_utype;
-      //logic        imm_z;
-      logic [31:0] dec_alu_op2;
-      logic [31:0] dec_op1_data;
-      logic [31:0] dec_op2_data;
-      logic [31:0] dec_rs2_data;
-      logic [31:0] mem_wb_data;
-      logic [31:0] rf_rs1_data;
-      logic [31:0] rf_rs2_data;
-
-
-      // instruction fetch state
+      // default assignment
+      rn.ifs = r.ifs;
       if ((!ctl.dec_stall && !ctl.cmiss_stall) || ctl.pipeline_kill) begin
-         rn.ifs.pc = ctl.exe_pc_sel == Bundle::PC_4 ? (r.ifs.pc + 4) :
-                     // ctl.exe_pc_sel == Bundle::PC_BRJMP ? exe_brjmp_target :
+         rn.ifs.pc = ctl.exe_pc_sel == Bundle::PC_4 ? (r.ifs.pc + 32'd4) :
+                     ctl.exe_pc_sel == Bundle::PC_BRJMP ? exe_brjmp_target :
                      ctl.exe_pc_sel == Bundle::PC_JALR ? exe_jump_reg_target :
                      exception_target;
       end
-      imem_in.req.addr = r.ifs.pc;
-      imem_in.req_valid = 1'b1; // TODO(Christian): Determine when this should actually be valid
-      if_instruction = imem_out.res.data;
+   end
 
+   assign imem_in.req.addr = r.ifs.pc;
+   assign imem_in.req_valid = 1'b1; // TODO(Christian): Determine when this should actually be valid
+   assign if_instruction = imem_out.res.data;
+
+   always_comb begin
+      rn.ids = r.ids;
       if (ctl.pipeline_kill) begin
          rn.ids.inst = 0; //TODO(Christian): Bubble
       end else if (!ctl.dec_stall && !ctl.cmiss_stall) begin
          if (ctl.if_kill) begin
-            rn.ids.inst = 0;
+            rn.ids.inst = 32'b0;
          end else begin
             rn.ids.inst = if_instruction;
          end
          rn.ids.pc = r.ifs.pc;
       end
-      // instruction decode stage
-      {dec_rs1_addr,dec_rs2_addr,dec_wb_addr} = {r.ids.inst[15:11],r.ids.inst[20:16],r.ids.inst[10:6]};
+   end
 
-      rf_in.rs1_addr = dec_rs1_addr;
-      rf_in.rs2_addr = dec_rs2_addr;
-      rf_in.waddr = r.wbs.wb_addr;
-      rf_in.wdata = r.wbs.wb_data;
-      rf_in.we = r.wbs.ctrl_rf_wen;
+   // instruction decode stage
+   // register addresses
+   assign dec_rs1_addr[4:0] = r.ids.inst[19:15];
+   assign dec_rs2_addr[4:0] = r.ids.inst[24:20];
+   assign dec_wb_addr[4:0] = r.ids.inst[11:7];
 
-      rf_rs1_data = rf_out.rs1_data;
-      rf_rs2_data = rf_out.rs2_data;
+   always_comb begin
+      // immediate variables
+      logic [11:0]   imm_stype;
+      logic [11:0]   imm_itype;
+      logic [11:0]   imm_sbtype;
+      logic [19:0]   imm_utype;
+      logic [19:0]   imm_ujtype;
+      logic [31:0]   imm_z;
+      logic [31:0]   imm_itype_sext;
+      logic [31:0]   imm_stype_sext;
+      logic [31:0]   imm_sbtype_sext;
+      logic [31:0]   imm_utype_sext;
+      logic [31:0]   imm_ujtype_sext;
+      // default assignments
+      rn.es = r.es;
 
+      // immediates
+      imm_itype[11:0] = r.ids.inst[31:20];
+      imm_stype[11:0] = {r.ids.inst[31:25],r.ids.inst[11:7]};
+      imm_sbtype[11:0] = {r.ids.inst[31],r.ids.inst[7],r.ids.inst[30:25],r.ids.inst[11:8]};
+      imm_utype[19:0] = r.ids.inst[31:12];
+      imm_ujtype[19:0] = {r.ids.inst[31], r.ids.inst[19:12], r.ids.inst[20], r.ids.inst[30:21]};
+      imm_z = {27'b0,r.ids.inst[19:15]};
 
-      // TODO(Christian): Immediates
-      // mux for second operand of alu
-      // TODO(Christian): Put this logic in another module
-      dec_op1_data = (ctl.op1_sel == Bundle::OP1_IMZ) ? '0 : // TODO(Christian) : immediate
+      // sign extended intermediates
+      imm_itype_sext[31:0]  = {{20{imm_itype[11]}}, imm_itype};
+      imm_stype_sext[31:0]  = {{20{imm_stype[11]}}, imm_stype};
+      imm_sbtype_sext[31:0] = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
+      imm_utype_sext[31:0]  = {imm_utype, 12'b0};
+      imm_ujtype_sext[31:0] = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
+
+      // operand 2 multiplexer
+      dec_alu_op2[31:0] = (ctl.op2_sel == Bundle::OP2_RS2)    ? rf_out.rs2_data[31:0] :
+                          (ctl.op2_sel == Bundle::OP2_ITYPE)  ? imm_itype_sext[31:0] :
+                          (ctl.op2_sel == Bundle::OP2_STYPE)  ? imm_stype_sext[31:0] :
+                          (ctl.op2_sel == Bundle::OP2_SBTYPE) ? imm_sbtype_sext[31:0] :
+                          (ctl.op2_sel == Bundle::OP2_UTYPE)  ? imm_utype_sext[31:0] :
+                          (ctl.op2_sel == Bundle::OP2_UJTYPE) ? imm_ujtype_sext[31:0] :
+                          32'b0;
+
+      // bypass multiplexers
+      dec_op1_data = (ctl.op1_sel == Bundle::OP1_IMZ) ? imm_z :
                      (ctl.op1_sel == Bundle::OP1_PC) ? r.ids.pc :
-                     (r.es.wb_addr == dec_rs1_addr && r.es.ctrl_rf_wen) ? alu_out.data :
-                     //                     (r.ms.wb_addr == dec.rs1_addr && r.ms.ctrl_rf_wen) ? r.ms.mem_wbdata :
-                     (r.wbs.wb_addr == dec_rs1_addr && r.wbs.ctrl_rf_wen) ? r.wbs.wb_data : rf_rs1_data;
+                     (r.es.wb_addr  == dec_rs1_addr) && (dec_rs1_addr != 0) && r.es.ctrl_rf_wen  ? alu_out.data :
+                     (r.ms.wb_addr  == dec_rs1_addr) && (dec_rs1_addr != 0) && r.ms.ctrl_rf_wen  ? mem_wb_data :
+                     (r.wbs.wb_addr == dec_rs1_addr) && (dec_rs1_addr != 0) && r.wbs.ctrl_rf_wen ? r.wbs.wb_data :
+                     rf_rs1_data;
 
-      dec_op2_data = (r.es.wb_addr == dec_rs2_addr) && r.es.ctrl_rf_wen && ctl.op2_sel == Bundle::OP2_RS2 ? alu_out.data :
-       //              (r.ms.wb_addr == dec.rs2_addr) && r.ms.ctrl_rf_wen && ctl.op2_sel == Bundle::OP2_RS2 ? r.mem.wb_data :
-                     (r.wbs.wb_addr == dec_rs2_addr) && r.wbs.ctrl_rf_wen && ctl.op2_sel == Bundle::OP2_RS2 ? r.wbs.wb_data : dec_alu_op2;
+      dec_op2_data = (r.es.wb_addr  == dec_rs2_addr) && (dec_rs2_addr != 0) && r.es.ctrl_rf_wen  && (ctl.op2_sel == Bundle::OP2_RS2) ? alu_out.data :
+                     (r.ms.wb_addr  == dec_rs2_addr) && (dec_rs2_addr != 0) && r.ms.ctrl_rf_wen  && (ctl.op2_sel == Bundle::OP2_RS2) ? mem_wb_data :
+                     (r.wbs.wb_addr == dec_rs2_addr) && (dec_rs2_addr != 0) && r.wbs.ctrl_rf_wen && (ctl.op2_sel == Bundle::OP2_RS2) ? r.wbs.wb_data :
+                     dec_alu_op2;
 
+      dec_rs2_data = (r.es.wb_addr  == dec_rs2_addr) && r.es.ctrl_rf_wen  && (dec_rs2_addr != 0) ? alu_out.data :
+                     (r.ms.wb_addr  == dec_rs2_addr) && r.ms.ctrl_rf_wen  && (dec_rs2_addr != 0) ? mem_wb_data :
+                     (r.wbs.wb_addr == dec_rs2_addr) && r.wbs.ctrl_rf_wen && (dec_rs2_addr != 0) ? r.wbs.wb_data :
+                     rf_rs2_data;
 
-      dec_rs2_data = (r.es.wb_addr == dec_rs2_addr) && r.es.ctrl_rf_wen ? alu_out.data : 0;
-                        // (r.ms.wb_addr == dec.rs2_addr) && r.ms.ctrl_rf_wen ? r.mem.wbdata :
-                        // (r.wbs.wb_addr == dec.rs2_addr) && r.wb.ctrl_rf_wen ? r.wbs.wb_data : rf_out.rs2_data;
       // stall logic
       if (ctl.dec_stall && !ctl.cmiss_stall || ctl.pipeline_kill) begin
          // kill exe stage
@@ -182,12 +232,14 @@ module DataPath(
          rn.es.ctrl_mem_val = 1'b0;
          rn.es.ctrl_mem_fcn = Bundle::M_X;
          rn.es.ctrl_br_type = Bundle::BR_N;
+         rn.es.ctrl_csr_cmd = Bundle::CSR_N;
       end else if (!ctl.dec_stall && !ctl.cmiss_stall) begin
          rn.es.pc = r.ids.pc;
          rn.es.rs1_addr = dec_rs1_addr;
          rn.es.rs2_addr = dec_rs2_addr;
          rn.es.op1_data = dec_op1_data;
          rn.es.op2_data = dec_op2_data;
+         rn.es.rs2_data = dec_rs2_data;
          rn.es.ctrl_op2_sel = ctl.op2_sel;
          rn.es.ctrl_alu_fun = ctl.alu_fun;
          rn.es.ctrl_wb_sel = ctl.wb_sel;
@@ -197,8 +249,8 @@ module DataPath(
             rn.es.ctrl_rf_wen = 1'b0;
             rn.es.ctrl_mem_val = 1'b0;
             rn.es.ctrl_mem_fcn = Bundle::M_X;
-            // es_next.mem_typ =
-            // es_next.ctrl_csr_cmd = ctl.csr_cmd;
+            rn.es.ctrl_mem_typ = Bundle::MT_X;
+            rn.es.ctrl_csr_cmd = ctl.csr_cmd;
             rn.es.ctrl_br_type = Bundle::BR_N;
          end else begin
             rn.es.inst = r.ids.inst;
@@ -207,11 +259,16 @@ module DataPath(
             rn.es.ctrl_mem_val = ctl.mem_val;
             rn.es.ctrl_mem_fcn = ctl.mem_fcn;
             rn.es.ctrl_mem_typ = ctl.mem_typ;
-            // rn.es.ctrl_csr_cmd = ctl.csr_cmd;
+            rn.es.ctrl_csr_cmd = ctl.csr_cmd;
             rn.es.ctrl_br_type = ctl.br_type;
          end
       end // if (!ctl.dec_stall && !ctl.ccache_stall)
-      // execute stage
+   end
+
+   // execute stage
+   always_comb begin
+      rn.ms = r.ms;
+      // alu input
       alu_in.op1 = r.es.op1_data;
       alu_in.op2 = r.es.op2_data;
       alu_in.fun = r.es.ctrl_alu_fun;
@@ -235,13 +292,24 @@ module DataPath(
          rn.ms.ctrl_mem_fcn = r.es.ctrl_mem_fcn;
          rn.ms.ctrl_mem_typ = r.es.ctrl_mem_typ;
          rn.ms.ctrl_wb_sel = r.es.ctrl_wb_sel;
-      end
+         rn.ms.ctrl_csr_cmd = r.es.ctrl_csr_cmd;
+      end // if (!ctl.cmiss_stall)
+   end
+
+   // memory stage
+   always_comb begin
+      rn.wbs = r.wbs;
+      // writeback data mux
       mem_wb_data = (r.ms.ctrl_wb_sel == Bundle::WB_ALU) ? r.ms.alu_out :
                     (r.ms.ctrl_wb_sel == Bundle::WB_PC4) ? r.ms.alu_out :
                     (r.ms.ctrl_wb_sel == Bundle::WB_MEM) ? dmem_out.res.data :
+                    // (r.ms.ctrl_wb_sel == Bundle::WB_CSR) ? csr_in.rdata;
                     // TODO(Christian) CSR
                     r.ms.alu_out;
-      // write back stage
+   end
+
+   // write back stage
+   always_comb begin
       if (!ctl.cmiss_stall) begin
          rn.wbs.wb_addr = r.ms.wb_addr;
          rn.wbs.wb_data = mem_wb_data;
@@ -249,20 +317,21 @@ module DataPath(
       end else begin
          rn.wbs.ctrl_rf_wen = 1'b0;
       end
-      // external signals
-      dat.dec_inst = r.ids.inst;
-      dat.exe_br_eq = (r.es.op1_data == r.es.rs2_data);
-      dat.exe_br_lt = (r.es.op1_data < r.es.op2_data);
-      dat.exe_br_type = r.es.ctrl_br_type;
-      // datapath to memory signals
-      dmem_in.req_valid = r.ms.ctrl_mem_val;
-      dmem_in.req.addr = r.ms.alu_out;
-      dmem_in.req.fcn = r.ms.ctrl_mem_fcn;
-      dmem_in.req.typ = r.ms.ctrl_mem_typ;
-      dmem_in.req.data = r.ms.rs2_data;
-   end
+   end // always_comb
 
    always_ff @(posedge clk) begin
       r <= rn;
    end
+
+   // external signals
+   assign dat.dec_inst = r.ids.inst;
+   assign dat.exe_br_eq = (r.es.op1_data == r.es.rs2_data);
+   assign dat.exe_br_lt = (r.es.op1_data < r.es.op2_data);
+   assign dat.exe_br_type = r.es.ctrl_br_type;
+   // datapath to memory signals
+   assign dmem_in.req_valid = r.ms.ctrl_mem_val;
+   assign dmem_in.req.addr = r.ms.alu_out;
+   assign dmem_in.req.fcn = r.ms.ctrl_mem_fcn;
+   assign dmem_in.req.typ = r.ms.ctrl_mem_typ;
+   assign dmem_in.req.data = r.ms.rs2_data;
 endmodule

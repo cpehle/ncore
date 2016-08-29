@@ -1,6 +1,13 @@
 `ifndef _Bundle
 `define _Bundle
 package Bundle;
+   typedef enum [1:0] {
+                 CSR_N,
+                 CSR_W,
+                 CSR_S,
+                 CSR_I
+                 } ControlRegisterCommand;
+
 
    typedef enum [2:0] {
                        MT_B,
@@ -8,6 +15,7 @@ package Bundle;
                        MT_H,
                        MT_HU,
                        MT_W,
+                       MT_WU,
                        MT_X
                        } MemoryMaskType;
 
@@ -20,11 +28,14 @@ package Bundle;
                        } WriteBackSelect;
 
    typedef enum [4:0] {
+                       ALU_X,
                        ALU_ADD,
                        ALU_SUB,
                        ALU_SLL,
                        ALU_SRL,
                        ALU_SRA,
+                       ALU_SLT,
+                       ALU_SLTU,
                        ALU_AND,
                        ALU_OR,
                        ALU_XOR
@@ -74,6 +85,7 @@ package Bundle;
       MemoryWriteSignal       mem_fcn;
       MemoryMaskType mem_typ;
       logic       pipeline_kill;
+      ControlRegisterCommand csr_cmd;
    } ControlToData;
 
    typedef struct packed {
@@ -167,10 +179,13 @@ package Bundle;
       logic       pipeline_kill;
       logic [3:0] br_type;
       logic       br_eq;
+      logic       imem_res_valid;
    } BranchIn;
 
    typedef struct packed {
       PcSel pc_sel;
+      logic       if_kill;
+      logic       dec_kill;
    } BranchOut;
 
 

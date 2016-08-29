@@ -1,6 +1,6 @@
 //@file ControlPath.sv
 //@author Christian Pehle
-//@brief control path of the the fixed point facility
+//@brief
 `include "Bundle.sv"
 `include "Instructions.sv"
 module ControlPath (
@@ -10,16 +10,16 @@ module ControlPath (
                    input  Bundle::DataToControl dat,
                    input  Bundle::MemoryOut imem_out,
                    output Bundle::MemoryIn imem_in,
-                   input  Bundle::MemoryOut dmem_out
-                   // output Bundle::MemoryIn dmem_in
+                   input  Bundle::MemoryOut dmem_out,
+                   output Bundle::MemoryIn dmem_in
 );
 
    typedef struct packed {
-      logic inst;
-      Bundle::BranchType  br_type;
-      Bundle::Op1Sel op1_sel;
-      Bundle::Op2Sel op2_sel;
-      Bundle::RegisterOpEn rs1_oen;
+      logic valid;                      // valid instruction
+      Bundle::BranchType  br_type;      // branch type
+      Bundle::Op1Sel op1_sel;           // operand 1 select for alu
+      Bundle::Op2Sel op2_sel;           // operand 2 select for alu
+      Bundle::RegisterOpEn rs1_oen;     //
       Bundle::RegisterOpEn rs2_oen;
       Bundle::AluFun  alu_fun;
       Bundle::WriteBackSelect wb_sel;
@@ -27,84 +27,103 @@ module ControlPath (
       Bundle::MemoryEnable mem_en;
       Bundle::MemoryWriteSignal mem_fcn;
       Bundle::MemoryMaskType msk_sel;
+      Bundle::ControlRegisterCommand csr_cmd;
+      logic fence_i;
    } ControlSignals;
 
-   ControlSignals cs_default = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B};
+   ControlSignals cs_default = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
    ControlSignals cs;
 
    import Bundle::*;
    always_comb begin
       cs = cs_default;
       case (dat.dec_inst) inside
-        // load/store instructions //TODO
-        `LBZ:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B};
-        `LBZU:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_BU};
-        `LBZX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B};
-        `LBZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_BU};
-        `LHZ:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_H};
-        `LHZU:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_HU};
-        `LHZX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_H};
-        `LHZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_HU};
-        `LWZ:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W};
-        `LWZU:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W};
-        `LWZX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W};
-        `LWZUX: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W};
-        `STB:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_B};
-        `STBX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_B};
-        `STH:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_H};
-        `STHX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_H};
-        `STW:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_W};
-        `STWX:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XWR,MT_W};
-        // immediate instructions //TODO
-        `ADDI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ADDIC: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ADDIS: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ANDI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_AND,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ANDIS: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_AND,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ORI:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_OR ,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ORIS:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_OR ,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `XORI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_XOR,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `XORIS: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_XOR,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        // alu instructions //TODO
-        `ADD:    cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ADDC:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ADDZE:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ADDE:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `ADDME:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `SUBF:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `SUBFC:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `SUBFE:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `SUBFZE: cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `SUBFME: cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `MULHW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `MULHWU: cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `MULLW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `DIVW:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `DIVWU:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
-        `NEG:    cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X};
+        // branch/jump instructions
+        `JAL:  cs = '{1'b1,BR_J  ,OP1_RS1,OP2_UJTYPE,OEN_0,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `JALR: cs = '{1'b1,BR_JR ,OP1_RS1,OP2_ITYPE ,OEN_1,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `BNE:  cs = '{1'b1,BR_NE ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `BEQ:  cs = '{1'b1,BR_EQ ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `BLT:  cs = '{1'b1,BR_LT ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `BLTU: cs = '{1'b1,BR_LTU,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `BGE:  cs = '{1'b1,BR_GE ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `BGEU: cs = '{1'b1,BR_GEU,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
+
+        // load/store instructions
+        `LB:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B ,CSR_N,1'b0};
+        `LH:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_H ,CSR_N,1'b0};
+        `LW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W ,CSR_N,1'b0};
+        `LBU: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_BU,CSR_N,1'b0};
+        `LHU: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_HU,CSR_N,1'b0};
+        `SB:  cs = '{1'b1,BR_N,OP1_RS1,OP2_STYPE,OEN_1,OEN_1,ALU_ADD,WB_X  ,REN_0,MEN_1,M_XWR,MT_B ,CSR_N,1'b0};
+        `SH:  cs = '{1'b1,BR_N,OP1_RS1,OP2_STYPE,OEN_1,OEN_1,ALU_ADD,WB_X  ,REN_0,MEN_1,M_XWR,MT_H ,CSR_N,1'b0};
+        `SW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_STYPE,OEN_1,OEN_1,ALU_ADD,WB_X  ,REN_0,MEN_1,M_XWR,MT_W ,CSR_N,1'b0};
+
+        // TODO
+        `AUIPC: cs = cs_default;
+        `LUI:   cs = cs_default;
+
+        // immediate alu
+        `ADDI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SLTI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SLT ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SLTIU: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SLTU,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `ANDI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_AND ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `ORI:   cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_OR  ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `XORI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_XOR ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SLLI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SLL ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SRLI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SRL ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SRAI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SRA ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+
+        // alu
+        `ADD:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SUB:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SUB ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SLT:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SLT ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SLTU: cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SLTU,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `AND:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_AND ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `OR:   cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_OR  ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `XOR:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_XOR ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SLL:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SLL ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SRL:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SRL ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `SRA:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SRA ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+
+        //TODO
+        `CSRRWI: cs = cs_default;
+        `CSRRSI: cs = cs_default;
+        `CSRRW:  cs = cs_default;
+        `CSRRS:  cs = cs_default;
+        `CSRRC:  cs = cs_default;
+        `CSRRCI: cs = cs_default;
+
+        // TODO
+        `SCALL:  cs = cs_default;
+        `SRET:   cs = cs_default;
+        `MRTS:   cs = cs_default;
+        `SBREAK: cs = cs_default;
+        `WFI:    cs = cs_default;
+
+        // TODO
+        `FENCE_I: cs = cs_default;
+        `FENCE:   cs = cs_default;
         default: cs = cs_default;
       endcase // case (dat.dec_inst)
    end // always_comb
 
    // Branch logic
-   BranchIn branch_in = '{ctl.pipeline_kill, dat.exe_br_type, dat.exe_br_eq};
+   BranchIn branch_in = '{ctl.pipeline_kill, dat.exe_br_type, dat.exe_br_eq, imem_out.res_valid};
    BranchOut branch_out;
    Branch b(/*AUTOINST*/
             // Interfaces
             .branch_in                  (branch_in),
             .branch_out                 (branch_out));
-   logic if_kill = (branch_out.pc_sel != PC_4) || !imem_out.res_valid;
-   logic dec_kill = (branch_out.pc_sel != PC_4);
 
    // TODO(Christian): Exception handling
 
 
    // decode logic
-   logic [4:0] dec_rs1_addr = dat.dec_inst[15:11];
-   logic [4:0] dec_rs2_addr = dat.dec_inst[20:16];
-   logic [4:0] dec_wb_addr = dat.dec_inst[10:6];
-   RegisterOpEn dec_rs1_oen = dec_kill ? OEN_0 : cs.rs1_oen;
-   RegisterOpEn dec_rs2_oen = dec_kill ? OEN_0 : cs.rs2_oen;
+   logic [4:0] dec_rs1_addr = dat.dec_inst[19:15];
+   logic [4:0] dec_rs2_addr = dat.dec_inst[24:20];
+   logic [4:0] dec_wb_addr = dat.dec_inst[11:7];
+   RegisterOpEn dec_rs1_oen = branch_out.dec_kill ? OEN_0 : cs.rs1_oen;
+   RegisterOpEn dec_rs2_oen = branch_out.dec_kill ? OEN_0 : cs.rs2_oen;
 
    // stall logic
    logic hazard_stall = 1'b0; //TODO
@@ -123,12 +142,11 @@ module ControlPath (
 
    StallLogicState sl;
    StallLogicState sln;
-   logic           stall;
 
    always_comb begin
       sln = sl;
       if (!hazard_stall && !cmiss_stall) begin
-         if (dec_kill) begin
+         if (branch_out.dec_kill) begin
             // kill exe stage
             sln.exe_reg_wbaddr = 5'b0;
             sln.exe_reg_ctrl_rf_wen = 1'b0;
@@ -153,22 +171,27 @@ module ControlPath (
    end // always_comb
    always @(posedge clk or posedge clk) begin
       if (reset) begin
+         sl <= '0;
       end begin
          sl <= sln;
       end
    end
 
    logic exe_inst_is_load = cs.mem_en && (cs.mem_fcn == M_XRD);
-   assign stall = (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs1_addr) && dec_rs1_oen) || (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs2_addr) && dec_rs2_oen); // TODO(Christian) exe_reg_is_csr
+   assign cmiss_stall = !imem_out.res_valid;
+   assign hazard_stall = (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs1_addr) && dec_rs1_oen)
+                      || (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs2_addr) && dec_rs2_oen)
+                      || (sl.exe_reg_is_csr);
+
 
    // Output
    always_comb begin
-      ctl.dec_stall = stall;
+      ctl.dec_stall = hazard_stall;
       ctl.cmiss_stall = !imem_out.res_valid || !((dat.mem_ctrl_dmem_val && dmem_out.res_valid) || !dat.mem_ctrl_dmem_val);
       ctl.exe_pc_sel = branch_out.pc_sel;
       ctl.br_type = cs.br_type;
-      ctl.if_kill = if_kill;
-      ctl.dec_kill = dec_kill;
+      ctl.if_kill = branch_out.if_kill;
+      ctl.dec_kill = branch_out.dec_kill;
       ctl.op1_sel = cs.op1_sel;
       ctl.op2_sel = cs.op2_sel;
       ctl.alu_fun = cs.alu_fun;
@@ -177,7 +200,7 @@ module ControlPath (
       // TODO(Christian): Fence, Exceptions
       imem_in.req_valid = 1'b1;
       imem_in.req.fcn = M_XRD;
-      imem_in.req.typ = MT_W;
+      imem_in.req.typ = MT_WU;
       ctl.mem_val = cs.mem_en;
       ctl.mem_fcn = cs.mem_fcn;
       ctl.mem_typ = cs.msk_sel;

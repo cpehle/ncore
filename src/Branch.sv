@@ -5,7 +5,7 @@ module Branch(
 );
    import Bundle::*;
    // Branch logic
-   assign branch_out.pc_sel = branch_in.pipeline_kill ? PC_EXC :
+   PcSel pc_sel = branch_in.pipeline_kill ? PC_EXC :
                               (branch_in.br_type == BR_N) ? PC_4 :
                               (branch_in.br_type == BR_NE) ? (!branch_in.br_eq ? PC_BRJMP : PC_4) :
                               (branch_in.br_type == BR_EQ) ? (!branch_in.br_eq ? PC_BRJMP : PC_4) :
@@ -15,4 +15,8 @@ module Branch(
                               (branch_in.br_type == BR_LTU) ? (!branch_in.br_eq ? PC_BRJMP : PC_4) :
                               (branch_in.br_type == BR_J) ? (!branch_in.br_eq ? PC_BRJMP : PC_4) :
                               (branch_in.br_type == BR_JR) ?  PC_JALR : PC_4;
+
+   assign branch_out.pc_sel   = pc_sel;
+   assign branch_out.if_kill  = (pc_sel != PC_4) || !branch_in.imem_res_valid;
+   assign branch_out.dec_kill = (pc_sel != PC_4);
 endmodule

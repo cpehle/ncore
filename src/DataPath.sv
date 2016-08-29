@@ -142,13 +142,13 @@ module DataPath(
    end
 
    assign imem_in.req.addr = r.ifs.pc;
-   assign imem_in.req_valid = 1'b1; // TODO(Christian): Determine when this should actually be valid
+   assign imem_in.req_valid = 1'b1;
    assign if_instruction = imem_out.res.data;
 
    always_comb begin
       rn.ids = r.ids;
       if (ctl.pipeline_kill) begin
-         rn.ids.inst = 0; //TODO(Christian): Bubble
+         rn.ids.inst = 32'b0;
       end else if (!ctl.dec_stall && !ctl.cmiss_stall) begin
          if (ctl.if_kill) begin
             rn.ids.inst = 32'b0;
@@ -164,38 +164,26 @@ module DataPath(
    assign dec_rs1_addr[4:0] = r.ids.inst[19:15];
    assign dec_rs2_addr[4:0] = r.ids.inst[24:20];
    assign dec_wb_addr[4:0] = r.ids.inst[11:7];
+   // immediate variables
+
+   // immediates
+   logic [11:0] imm_itype = r.ids.inst[31:20];
+   logic [11:0] imm_stype = {r.ids.inst[31:25],r.ids.inst[11:7]};
+   logic [11:0] imm_sbtype = {r.ids.inst[31],r.ids.inst[7],r.ids.inst[30:25],r.ids.inst[11:8]};
+   logic [19:0] imm_utype = r.ids.inst[31:12];
+   logic [19:0] imm_ujtype = {r.ids.inst[31], r.ids.inst[19:12], r.ids.inst[20], r.ids.inst[30:21]};
+   logic [31:0] imm_z = {27'b0,r.ids.inst[19:15]};
+
+   // sign extended intermediates
+   logic [31:0] imm_itype_sext  = {{20{imm_itype[11]}}, imm_itype};
+   logic [31:0] imm_stype_sext  = {{20{imm_stype[11]}}, imm_stype};
+   logic [31:0] imm_sbtype_sext = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
+   logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
+   logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
 
    always_comb begin
-      // immediate variables
-      logic [11:0]   imm_stype;
-      logic [11:0]   imm_itype;
-      logic [11:0]   imm_sbtype;
-      logic [19:0]   imm_utype;
-      logic [19:0]   imm_ujtype;
-      logic [31:0]   imm_z;
-      logic [31:0]   imm_itype_sext;
-      logic [31:0]   imm_stype_sext;
-      logic [31:0]   imm_sbtype_sext;
-      logic [31:0]   imm_utype_sext;
-      logic [31:0]   imm_ujtype_sext;
       // default assignments
       rn.es = r.es;
-
-      // immediates
-      imm_itype[11:0] = r.ids.inst[31:20];
-      imm_stype[11:0] = {r.ids.inst[31:25],r.ids.inst[11:7]};
-      imm_sbtype[11:0] = {r.ids.inst[31],r.ids.inst[7],r.ids.inst[30:25],r.ids.inst[11:8]};
-      imm_utype[19:0] = r.ids.inst[31:12];
-      imm_ujtype[19:0] = {r.ids.inst[31], r.ids.inst[19:12], r.ids.inst[20], r.ids.inst[30:21]};
-      imm_z = {27'b0,r.ids.inst[19:15]};
-
-      // sign extended intermediates
-      imm_itype_sext[31:0]  = {{20{imm_itype[11]}}, imm_itype};
-      imm_stype_sext[31:0]  = {{20{imm_stype[11]}}, imm_stype};
-      imm_sbtype_sext[31:0] = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
-      imm_utype_sext[31:0]  = {imm_utype, 12'b0};
-      imm_ujtype_sext[31:0] = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
-
       // operand 2 multiplexer
       dec_alu_op2[31:0] = (ctl.op2_sel == Bundle::OP2_RS2)    ? rf_out.rs2_data[31:0] :
                           (ctl.op2_sel == Bundle::OP2_ITYPE)  ? imm_itype_sext[31:0] :

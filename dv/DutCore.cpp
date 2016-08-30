@@ -16,7 +16,6 @@ namespace DutCore {
                         for (int clk = 0; clk < 2; clk++) {
                                 tfp->dump(2*i+clk);
                                 core->clk = !core->clk;
-
                                 // service instruction memory requests
                                 uint32_t iaddr = core->imem_in_req_addr;
                                 core->imem_out_req_ready = 1;
@@ -35,7 +34,6 @@ namespace DutCore {
 
                                 core->eval();
                         }
-
                 }
         }
 }
@@ -58,7 +56,7 @@ int main(int argc, char** argv) {
         };
 
         for (int i = 0; i < 10000; i++) {
-                m.instruction_memory.push_back(i);
+                m.instruction_memory.push_back(0x0);
                 m.data_memory.push_back(0x0);
         }
 

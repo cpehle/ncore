@@ -14,7 +14,8 @@ module DataPath(
                 input  Bundle::MemoryOut dmem_out
     );
    // datapath is a five stage pipeline.
-   // the following
+
+   // the following are the pipeline registers
    typedef struct packed {
       logic [31:0] pc; // program counter
    } InstructionFetchState;
@@ -69,7 +70,7 @@ module DataPath(
    } WriteBackState;
 
    // This structure captures the whole state of
-   // the fixed point facility pipeline.
+   // the fixed point pipeline
    typedef struct packed {
       InstructionFetchState  ifs;
       InstructionDecodeState ids;
@@ -308,6 +309,12 @@ module DataPath(
    end // always_comb
 
    always_ff @(posedge clk) begin
+      // debug printout
+/* -----\/----- EXCLUDED -----\/-----
+      $display(
+               "(0x%x, 0x%x, 0x%x, 0x%x) [%x, %x, %x, %x] %s %s", r.ifs.pc, r.ids.pc, r.es.pc, rn.es.pc, if_instruction[6:0], r.ids.inst[6:0], r.es.inst[6:0], rn.es.inst[6:0], ctl.cmiss_stall ? "FREEZE" : ctl.dec_stall ? "STALL " : "", ctl.exe_pc_sel == 1 ? "BJ" : ctl.exe_pc_sel == 2 ? "JR" : ctl.exe_pc_sel == 3 ? "EX" : ctl.exe_pc_sel == 0 ? "  " : "??"
+               );
+ -----/\----- EXCLUDED -----/\----- */
       r <= rn;
    end
 
@@ -315,6 +322,7 @@ module DataPath(
    assign dat.dec_inst = r.ids.inst;
    assign dat.exe_br_eq = (r.es.op1_data == r.es.rs2_data);
    assign dat.exe_br_lt = (r.es.op1_data < r.es.op2_data);
+   assign dat.exe_br_ltu = (r.es.op1_data < r.es.op2_data); //TODO(Christian): Figure unsinged compare out
    assign dat.exe_br_type = r.es.ctrl_br_type;
    // datapath to memory signals
    assign dmem_in.req_valid = r.ms.ctrl_mem_val;

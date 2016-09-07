@@ -29,7 +29,7 @@ module RegisterFile(input clk,
 
    always_ff @(posedge clk) begin
       if (rf_in.we && (rf_in.waddr != 5'd0)) begin
-         rf[rf_in.waddr] <= 32'd0;
+         rf[rf_in.waddr] <= rf_in.wdata;
       end
    end
 

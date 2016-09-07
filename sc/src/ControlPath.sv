@@ -197,6 +197,7 @@ module ControlPath (
       ctl.alu_fun = cs.alu_fun;
       ctl.wb_sel = cs.wb_sel;
       ctl.rf_wen = cs.rf_wen;
+      // $display("hs(%b) cm(%b) pc_sel(%d) br_type(%d) if_kill(%d) dec_kill(%d) op1_sel(%d) op2_sel(%d) alu_fun(%d) wb_sel(%d) rf_wen(%d)" , hazard_stall, ctl.cmiss_stall, branch_out.pc_sel, cs.br_type, branch_out.if_kill, branch_out.dec_kill, cs.op1_sel, cs.op2_sel, cs.alu_fun, cs.wb_sel, cs.rf_wen);
       // TODO(Christian): Fence, Exceptions
       imem_in.req_valid = 1'b1;
       imem_in.req.fcn = M_XRD;

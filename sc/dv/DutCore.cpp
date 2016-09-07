@@ -177,9 +177,6 @@ namespace riscv {
                 instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 |  funct3 << 12 | rd << 7 | opcode);
         }
 
-
-
-
 }
 
 namespace DutCore {
@@ -256,7 +253,6 @@ int main(int argc, char** argv) {
         riscv::addi(instruction_memory,riscv::reg::x6,riscv::reg::x0,40);
         riscv::add(instruction_memory,riscv::reg::x7,riscv::reg::x5,riscv::reg::x6);
         riscv::addi(instruction_memory,riscv::reg::x1,riscv::reg::x0,4);
-        //
         // riscv::lw(instruction_memory,riscv::reg::x2,riscv::reg::x0,5);
         // riscv::add(instruction_memory,riscv::reg::x1,riscv::reg::x2,riscv::reg::x3);
         riscv::sw(instruction_memory,riscv::reg::x1,0,riscv::reg::x7);

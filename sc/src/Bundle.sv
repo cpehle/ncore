@@ -45,7 +45,7 @@ package Bundle;
                        OP1_RS1,
                        OP1_PC,
                        OP1_IMZ,
-                       OP1_NONE
+                       OP1_X
                        } Op1Sel;
 
    typedef enum [2:0] {

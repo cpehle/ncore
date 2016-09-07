@@ -1,6 +1,6 @@
 //@file ControlPath.sv
 //@author Christian Pehle
-//@brief
+//@brief this implements the control path of the core
 `include "Bundle.sv"
 `include "Instructions.sv"
 module ControlPath (
@@ -15,20 +15,20 @@ module ControlPath (
 );
 
    typedef struct packed {
-      logic valid;                      // valid instruction
-      Bundle::BranchType  br_type;      // branch type
-      Bundle::Op1Sel op1_sel;           // operand 1 select for alu
-      Bundle::Op2Sel op2_sel;           // operand 2 select for alu
-      Bundle::RegisterOpEn rs1_oen;     //
-      Bundle::RegisterOpEn rs2_oen;
-      Bundle::AluFun  alu_fun;
-      Bundle::WriteBackSelect wb_sel;
-      Bundle::RegisterFileWriteEnable rf_wen;
-      Bundle::MemoryEnable mem_en;
-      Bundle::MemoryWriteSignal mem_fcn;
-      Bundle::MemoryMaskType msk_sel;
-      Bundle::ControlRegisterCommand csr_cmd;
-      logic fence_i;
+      logic valid;                            // valid instruction
+      Bundle::BranchType  br_type;            // branch type
+      Bundle::Op1Sel op1_sel;                 // operand 1 select for alu
+      Bundle::Op2Sel op2_sel;                 // operand 2 select for alu
+      Bundle::RegisterOpEn rs1_oen;           // register source 1 operand enable
+      Bundle::RegisterOpEn rs2_oen;           // register source 2 operand enable
+      Bundle::AluFun  alu_fun;                // alu function select
+      Bundle::WriteBackSelect wb_sel;         // writeback select
+      Bundle::RegisterFileWriteEnable rf_wen; // register file write enable
+      Bundle::MemoryEnable mem_en;            // memory write enable
+      Bundle::MemoryWriteSignal mem_fcn;      // memory write/read signal
+      Bundle::MemoryMaskType msk_sel;         // memory mask
+      Bundle::ControlRegisterCommand csr_cmd; // control register command
+      logic fence_i;                          // thread fence
    } ControlSignals;
 
    ControlSignals cs_default = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
@@ -38,6 +38,10 @@ module ControlPath (
    always_comb begin
       cs = cs_default;
       case (dat.dec_inst) inside
+        // load upper immediate / add unsigned immediate program counter
+        `AUIPC: cs = '{1'b1,BR_N,OP1_PC,OP2_UTYPE,OEN_0,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `LUI:   cs = '{1'b1,BR_N,OP1_X ,OP2_UTYPE,OEN_0,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+
         // branch/jump instructions
         `JAL:  cs = '{1'b1,BR_J  ,OP1_RS1,OP2_UJTYPE,OEN_0,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `JALR: cs = '{1'b1,BR_JR ,OP1_RS1,OP2_ITYPE ,OEN_1,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
@@ -57,10 +61,6 @@ module ControlPath (
         `SB:  cs = '{1'b1,BR_N,OP1_RS1,OP2_STYPE,OEN_1,OEN_1,ALU_ADD,WB_X  ,REN_0,MEN_1,M_XWR,MT_B ,CSR_N,1'b0};
         `SH:  cs = '{1'b1,BR_N,OP1_RS1,OP2_STYPE,OEN_1,OEN_1,ALU_ADD,WB_X  ,REN_0,MEN_1,M_XWR,MT_H ,CSR_N,1'b0};
         `SW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_STYPE,OEN_1,OEN_1,ALU_ADD,WB_X  ,REN_0,MEN_1,M_XWR,MT_W ,CSR_N,1'b0};
-
-        // TODO
-        `AUIPC: cs = cs_default;
-        `LUI:   cs = cs_default;
 
         // immediate alu
         `ADDI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
@@ -85,7 +85,7 @@ module ControlPath (
         `SRL:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SRL ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `SRA:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SRA ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
 
-        //TODO
+        // TODO
         `CSRRWI: cs = cs_default;
         `CSRRSI: cs = cs_default;
         `CSRRW:  cs = cs_default;
@@ -107,16 +107,14 @@ module ControlPath (
       endcase // case (dat.dec_inst)
    end // always_comb
 
-   // Branch logic
+   // branch logic
    BranchIn branch_in = '{ctl.pipeline_kill, dat.exe_br_type, dat.exe_br_eq, imem_out.res_valid};
    BranchOut branch_out;
    Branch b(/*AUTOINST*/
             // Interfaces
             .branch_in                  (branch_in),
             .branch_out                 (branch_out));
-
    // TODO(Christian): Exception handling
-
 
    // decode logic
    logic [4:0] dec_rs1_addr = dat.dec_inst[19:15];
@@ -126,8 +124,8 @@ module ControlPath (
    RegisterOpEn dec_rs2_oen = branch_out.dec_kill ? OEN_0 : cs.rs2_oen;
 
    // stall logic
-   logic hazard_stall = 1'b0; //TODO
-   logic cmiss_stall = 1'b0; //TODO
+   logic       hazard_stall; // stall because of hazard
+   logic       cmiss_stall;  // stall because of cache miss
 
    typedef struct packed {
       logic [4:0] exe_reg_wbaddr;
@@ -178,13 +176,12 @@ module ControlPath (
    end
 
    logic exe_inst_is_load = cs.mem_en && (cs.mem_fcn == M_XRD);
-   assign cmiss_stall = !imem_out.res_valid;
+   assign cmiss_stall = !imem_out.res_valid || !((dat.mem_ctrl_dmem_val && dmem_out.res_valid) || !dat.mem_ctrl_dmem_val);
    assign hazard_stall = (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs1_addr) && dec_rs1_oen)
                       || (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs2_addr) && dec_rs2_oen)
                       || (sl.exe_reg_is_csr);
 
-
-   // Output
+   // output
    always_comb begin
       ctl.dec_stall = hazard_stall;
       ctl.cmiss_stall = !imem_out.res_valid || !((dat.mem_ctrl_dmem_val && dmem_out.res_valid) || !dat.mem_ctrl_dmem_val);
@@ -197,8 +194,7 @@ module ControlPath (
       ctl.alu_fun = cs.alu_fun;
       ctl.wb_sel = cs.wb_sel;
       ctl.rf_wen = cs.rf_wen;
-      // $display("hs(%b) cm(%b) pc_sel(%d) br_type(%d) if_kill(%d) dec_kill(%d) op1_sel(%d) op2_sel(%d) alu_fun(%d) wb_sel(%d) rf_wen(%d)" , hazard_stall, ctl.cmiss_stall, branch_out.pc_sel, cs.br_type, branch_out.if_kill, branch_out.dec_kill, cs.op1_sel, cs.op2_sel, cs.alu_fun, cs.wb_sel, cs.rf_wen);
-      // TODO(Christian): Fence, Exceptions
+      // TODO(Christian): Fence, Exceptions, CSR
       imem_in.req_valid = 1'b1;
       imem_in.req.fcn = M_XRD;
       imem_in.req.typ = MT_WU;
@@ -206,5 +202,4 @@ module ControlPath (
       ctl.mem_fcn = cs.mem_fcn;
       ctl.mem_typ = cs.msk_sel;
    end
-
 endmodule; // ControlPath

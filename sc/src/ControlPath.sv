@@ -167,7 +167,7 @@ module ControlPath (
       sln.mem_reg_ctrl_rf_wen = sl.exe_reg_ctrl_rf_wen;
       sln.wb_reg_ctrl_rf_wen = sl.mem_reg_ctrl_rf_wen;
    end // always_comb
-   always @(posedge clk or posedge clk) begin
+   always @(posedge clk or posedge reset) begin
       if (reset) begin
          sl <= '0;
       end begin
@@ -202,4 +202,4 @@ module ControlPath (
       ctl.mem_fcn = cs.mem_fcn;
       ctl.mem_typ = cs.msk_sel;
    end
-endmodule; // ControlPath
+endmodule // ControlPath

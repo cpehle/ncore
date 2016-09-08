@@ -3,10 +3,11 @@
 ## Licensed under the Apache License, Version 2.0
 ## http://www.apache.org/licenses/LICENSE-2.0
 
-VERILATOR := VERILATOR_ROOT=/work/verilator /work/verilator/bin/verilator
+VERILATOR := /wang/environment/software/Carbon/verilator/master/bin/verilator
+VERILATOR_ROOT= /wang/environment/software/Carbon/verilator/master/
 
-VIVADOPATH := /work/xilinx/Vivado/2014.3
-XSDKPATH := /work/xilinx/SDK/2014.3
+VIVADOPATH := /cad/products/xilinx/2014.3/Vivado/2014.3/
+XSDKPATH := /work/xilinx/SDK/2014.3/
 
 VIVADO := $(VIVADOPATH)/bin/vivado
 XELAB := $(VIVADOPATH)/bin/xelab

@@ -26,8 +26,8 @@ $(MODULE_CFG): _NAME := $(MODULE_NAME)
 $(MODULE_CFG): _OPTS := -I$(VIVADOPATH)/data/verilog/src/xeclib
 
 $(MODULE_CFG): $(MODULE_SRCS) Makefile
-	@echo "LINT (verilator): $(_NAME)"
-	@$(VERILATOR) --top-module top --lint-only $(_OPTS) $(_SV) $(_V)
+	# @echo "LINT (verilator): $(_NAME)"
+	# @$(VERILATOR) --top-module top --lint-only $(_OPTS) $(_SV) $(_V)
 	@mkdir -p $(_DIR)
 	@echo "# auto-generated file" > $@
 	@echo "set PART {$(_PART)}" >> $@

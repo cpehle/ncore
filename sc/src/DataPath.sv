@@ -79,6 +79,21 @@ module DataPath(
    Bundle::RegisterFileOut rf_out;
    logic [4:0]    dec_rs1_addr;
    logic [4:0]    dec_rs2_addr;
+   logic [31:0]   exe_brjmp_target;
+   logic [31:0]   exe_jump_reg_target;
+   logic [31:0]   exception_target;
+   logic [31:0]   if_instruction;
+   logic [4:0]    dec_wb_addr;
+   logic [31:0]   dec_alu_op2;
+   logic [31:0]   dec_op1_data;
+   logic [31:0]   dec_op2_data;
+   logic [31:0]   dec_rs2_data;
+   logic [31:0]   mem_wb_data;
+   logic [31:0]   rf_rs1_data;
+   logic [31:0]   rf_rs2_data;
+
+
+
 
    // register file i/o
    assign rf_in.rs1_addr = dec_rs1_addr;
@@ -104,18 +119,6 @@ module DataPath(
            .alu_in                      (alu_in),
            .alu_out                     (alu_out));
 
-   logic [31:0]   exe_brjmp_target = '0;
-   logic [31:0]   exe_jump_reg_target = '0;
-   logic [31:0]   exception_target = '0;
-   logic [31:0]   if_instruction;
-   logic [4:0]    dec_wb_addr;
-   logic [31:0]   dec_alu_op2;
-   logic [31:0]   dec_op1_data;
-   logic [31:0]   dec_op2_data;
-   logic [31:0]   dec_rs2_data;
-   logic [31:0]   mem_wb_data;
-   logic [31:0]   rf_rs1_data;
-   logic [31:0]   rf_rs2_data;
 
 
    assign exe_brjmp_target = es.pc + es.op2_data;
@@ -254,7 +257,7 @@ module DataPath(
          end
       end // if (!ctl.dec_stall && !ctl.ccache_stall)
    end // always_comb
-   always_comb @(posedge clk) begin
+   always_ff @(posedge clk) begin
       es <= esn;
    end
 

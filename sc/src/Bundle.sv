@@ -69,11 +69,24 @@ package Bundle;
                        REN_1
                        } RegisterFileWriteEnable;
 
+   typedef enum [3:0] {
+                       BR_N,
+                       BR_NE,
+                       BR_EQ,
+                       BR_GE,
+                       BR_GEU,
+                       BR_LT,
+                       BR_LTU,
+                       BR_J,
+                       BR_JR
+   } BranchType;
+
+   
    typedef struct packed {
       logic       dec_stall;
       logic       cmiss_stall;
       logic [1:0] exe_pc_sel;
-      logic [3:0] br_type;
+      BranchType br_type;
       logic       if_kill;
       logic       dec_kill;
       Op1Sel op1_sel;
@@ -196,16 +209,5 @@ package Bundle;
    } MemoryEnable;
 
 
-   typedef enum [3:0] {
-                       BR_N,
-                       BR_NE,
-                       BR_EQ,
-                       BR_GE,
-                       BR_GEU,
-                       BR_LT,
-                       BR_LTU,
-                       BR_J,
-                       BR_JR
-   } BranchType;
 endpackage // Bundle
 `endif

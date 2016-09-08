@@ -28,4 +28,4 @@ module Alu(input Bundle::AluIn alu_in,
        alu_out.data = 32'bx;
    endcase // case (alu_in.fun)
    end
-endmodule; // Alu
+endmodule // Alu

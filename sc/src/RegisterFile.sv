@@ -35,4 +35,4 @@ module RegisterFile(input clk,
 
    assign rf_out.rs1_data = rs1;
    assign rf_out.rs2_data = rs2;
-endmodule; // RegisterFile
+endmodule // RegisterFile

@@ -8,7 +8,6 @@ package Bundle;
                  CSR_I
                  } ControlRegisterCommand;
 
-
    typedef enum [2:0] {
                        MT_B,
                        MT_BU,
@@ -79,9 +78,8 @@ package Bundle;
                        BR_LTU,
                        BR_J,
                        BR_JR
-   } BranchType;
+                       } BranchType;
 
-   
    typedef struct packed {
       logic       dec_stall;
       logic       cmiss_stall;
@@ -117,7 +115,6 @@ package Bundle;
       logic [31:0] alu_op1;
       logic [31:0] alu_op2;
    } BypassOut;
-
 
    typedef struct packed {
       logic [31:0] dec_inst;
@@ -166,8 +163,7 @@ package Bundle;
    typedef enum [0:0] {
                        OEN_0,
                        OEN_1
-   } RegisterOpEn;
-
+                       } RegisterOpEn;
 
    typedef struct packed {
       AluFun fun;
@@ -179,14 +175,12 @@ package Bundle;
       logic [31:0] data;
    } AluOut;
 
-
    typedef enum [1:0] {
                        PC_4,
                        PC_BRJMP,
                        PC_JALR,
                        PC_EXC
-    } PcSel;
-
+                       } PcSel;
 
    typedef struct packed {
       logic       pipeline_kill;
@@ -201,13 +195,9 @@ package Bundle;
       logic       dec_kill;
    } BranchOut;
 
-
-
    typedef enum [0:0] {
                        MEN_0,
                        MEN_1
-   } MemoryEnable;
-
-
+                       } MemoryEnable;
 endpackage // Bundle
 `endif

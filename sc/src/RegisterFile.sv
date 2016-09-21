@@ -2,6 +2,7 @@
 module RegisterFile(input clk,
                     input  Bundle::RegisterFileIn rf_in,
                     output Bundle::RegisterFileOut rf_out);
+   /*verilator public_module*/
 
    logic [31:0]            rf[0:31];
    logic [31:0]            rs1;

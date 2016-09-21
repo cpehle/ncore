@@ -3,14 +3,12 @@
 `include "Bundle.sv"
 module DataPath(
                 input  clk,
-                // Control signals from control to data path
-                input  Bundle::ControlToData ctl,
-                // Signals from data path to control
-                output Bundle::DataToControl dat,
-                output Bundle::MemoryIn imem_in,
-                input  Bundle::MemoryOut imem_out,
-                output Bundle::MemoryIn dmem_in,
-                input  Bundle::MemoryOut dmem_out
+                input  Bundle::ControlToData ctl,  // Control signals from control to data path
+                output Bundle::DataToControl dat,  // Signals from data path to control
+                output Bundle::MemoryIn imem_in,   // Signals from instruction memory
+                input  Bundle::MemoryOut imem_out, // Signals to instruction memory
+                output Bundle::MemoryIn dmem_in,   // Signals from data memory
+                input  Bundle::MemoryOut dmem_out  // Signals to data memory
    );
    // datapath is a five stage pipeline.
    // the following are the pipeline registers
@@ -64,7 +62,7 @@ module DataPath(
    typedef struct packed {
       logic [4:0]  wb_addr;     // writeback address
       logic [31:0] wb_data;     // writeback data
-      logic        ctrl_rf_wen; // control register write enable
+      logic        ctrl_rf_wen; // control register file write enable
    } WriteBackState;
 
    // This structure captures the whole state of
@@ -92,9 +90,6 @@ module DataPath(
    logic [31:0]   rf_rs1_data;
    logic [31:0]   rf_rs2_data;
 
-
-
-
    // register file i/o
    assign rf_in.rs1_addr = dec_rs1_addr;
    assign rf_in.rs2_addr = dec_rs2_addr;
@@ -111,14 +106,12 @@ module DataPath(
                    // Inputs
                    .clk                 (clk));
 
-
    Bundle::AluIn alu_in;
    Bundle::AluOut alu_out;
    Alu alu(/*AUTOINST*/
            // Interfaces
            .alu_in                      (alu_in),
            .alu_out                     (alu_out));
-
 
 
    assign exe_brjmp_target = es.pc + es.op2_data;

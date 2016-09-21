@@ -1,4 +1,4 @@
-#include "VDutCore.h"
+#include <VDutCore.h>
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 #include <vector>
@@ -136,45 +136,45 @@ namespace riscv {
         void lhu(std::vector<uint32_t>& instructions, reg rd, reg rs1, uint32_t imm12) {
                 uint32_t ins = 0b0000011;
                 uint32_t op = 0b101;
-                instructions.push_back(imm12 << 20 | rs1 << 15 |  op << 12 | rd << 7 | ins);
+                instructions.push_back(imm12 << 20 | rs1 << 15 | op << 12 | rd << 7 | ins);
         }
 
         void sb(std::vector<uint32_t>& instructions, reg rs1, uint32_t imm, reg rs2) {
                 uint32_t opcode = 0b100011;
                 uint32_t funct3 = 0b000;
-                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 |  funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
+                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
         }
 
         void sh(std::vector<uint32_t>& instructions, reg rs1, uint32_t imm, reg rs2) {
                 uint32_t opcode = 0b100011;
                 uint32_t funct3 = 0b001;
-                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 |  funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
+                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
         }
 
         void sw(std::vector<uint32_t>& instructions, reg rs1, uint32_t imm, reg rs2) {
                 uint32_t opcode = 0b100011;
                 uint32_t funct3 = 0b010;
-                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 |  funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
+                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
         }
 
         void addi(std::vector<uint32_t>& instructions, reg rd, reg rs1, uint32_t imm12) {
                 uint32_t opcode = 0b0010011;
                 uint32_t funct3 = 0b000;
-                instructions.push_back(imm12 << 20 | rs1 << 15 |  funct3 << 12 | rd << 7 | opcode);
+                instructions.push_back(imm12 << 20 | rs1 << 15 | funct3 << 12 | rd << 7 | opcode);
         }
 
         void add(std::vector<uint32_t>& instructions, reg rd, reg rs2, reg rs1) {
                 uint32_t opcode = 0b0110011;
                 uint32_t funct7 = 0b0000000;
                 uint32_t funct3 = 0b000;
-                instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 |  funct3 << 12 | rd << 7 | opcode);
+                instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | rd << 7 | opcode);
         }
 
         void sub(std::vector<uint32_t>& instructions, reg rd, reg rs2, reg rs1) {
                 uint32_t opcode = 0b0110011;
                 uint32_t funct7 = 0b0100000;
                 uint32_t funct3 = 0b000;
-                instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 |  funct3 << 12 | rd << 7 | opcode);
+                instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | rd << 7 | opcode);
         }
 
 }
@@ -185,14 +185,18 @@ namespace DutCore {
                 std::vector<uint32_t> data_memory;
         };
 
-        void simulate(VDutCore* core, Memory& m, const size_t N, VerilatedVcdC* tfp) {
+        struct Options {
+                bool trace_memory;
+        };
+
+        void simulate(VDutCore* core, Memory& m, const size_t N, VerilatedVcdC* tfp, const Options opt) {
                 core->clk = 0;
                 for (size_t i = 0; i < N; i++) {
                         for (int clk = 0; clk < 2; clk++) {
                                 tfp->dump(2*i+clk);
                                 core->clk = !core->clk;
-                                // service instruction memory requests
 
+                                // service instruction memory requests
                                 uint32_t iaddr = core->imem_in_req_addr / 4;
                                 core->imem_out_req_ready = 1;
                                 if (core->imem_in_req_valid) {
@@ -215,22 +219,22 @@ namespace DutCore {
                                         }
                                 }
 
-
                                 core->eval();
                         }
 
-                        if (core->dmem_in_req_valid) {
-                                uint32_t daddr = core->dmem_in_req_addr/4;
-                                switch (core->dmem_in_req_fcn) {
-                                case 0x0:
-                                        std::cout << "r " << daddr << std::endl;
-                                        break;
-                                case 0x1:
-                                        std::cout << "w " << daddr  << " " << core->dmem_in_req_data << std::endl;
-                                        break;
+                        if (opt.trace_memory) {
+                                if (core->dmem_in_req_valid) {
+                                        uint32_t daddr = core->dmem_in_req_addr/4;
+                                        switch (core->dmem_in_req_fcn) {
+                                        case 0x0:
+                                                std::cout << "r " << daddr << std::endl;
+                                                break;
+                                        case 0x1:
+                                                std::cout << "w " << daddr  << " " << core->dmem_in_req_data << std::endl;
+                                                break;
+                                        }
                                 }
                         }
-
                 }
 
         }
@@ -258,9 +262,10 @@ int main(int argc, char** argv) {
         riscv::sw(instruction_memory,riscv::reg::x1,0,riscv::reg::x7);
         riscv::lw(instruction_memory,riscv::reg::x3,riscv::reg::x0,0);
 
+        const uint32_t nop = 0x13;
         for (int i = 0; i < 1000; i++) {
-                instruction_memory.push_back(0x00000013);
-                data_memory.push_back(i*4);
+                instruction_memory.push_back(nop);
+                data_memory.push_back(i);
         }
 
         DutCore::Memory m = {
@@ -268,7 +273,9 @@ int main(int argc, char** argv) {
                 data_memory
         };
 
-        simulate(core, m, 100, tfp);
+        DutCore::Options opt = { .trace_memory = false };
+
+        simulate(core, m, 100, tfp, opt);
 
         for (int i = 0; i < 10; i++) {
                 std::cout << m.data_memory[i] << std::endl;

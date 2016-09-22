@@ -65,7 +65,7 @@ module DataPath(
       logic        ctrl_rf_wen; // control register file write enable
    } WriteBackState;
 
-   // This structure captures the whole state of
+   // These structures capture the whole state of
    // the fixed point pipeline
    InstructionFetchState  ifs, ifsn;
    InstructionDecodeState ids, idsn;
@@ -151,13 +151,11 @@ module DataPath(
    always_ff @(posedge clk) begin
       ids <= idsn;
    end
-
    // instruction decode stage
    // register addresses
    assign dec_rs1_addr[4:0] = ids.inst[19:15];
    assign dec_rs2_addr[4:0] = ids.inst[24:20];
    assign dec_wb_addr[4:0] = ids.inst[11:7];
-
    // immediate variables
    // immediates
    logic [11:0] imm_itype = ids.inst[31:20];
@@ -173,7 +171,6 @@ module DataPath(
    logic [31:0] imm_sbtype_sext = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
    logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
    logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
-
 
    // execute stage
    always_comb begin
@@ -286,7 +283,6 @@ module DataPath(
    always_ff @(posedge clk) begin
       ms <= msn;
    end
-
    // write back stage
    // writeback data mux
    assign mem_wb_data = (ms.ctrl_wb_sel == Bundle::WB_ALU) ? ms.alu_out :

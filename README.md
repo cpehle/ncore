@@ -12,7 +12,7 @@ Verilog.
 A work in progress testbench can be found in sc/dv/ it uses
 [verilator](http://www.veripool.org/wiki/verilator), once I've figured
 how to get the ucb-bar RISCV tests to run, the current setup will
-probably mostly redundant.
+probably be redundant.
 
 In xilinx/ there is an incomplete synthesis flow to a xilinx
 bitfile. For this to actually work one would need some more work on

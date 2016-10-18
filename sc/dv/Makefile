@@ -10,6 +10,8 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h $(GTEST_DIR)/include/gtest/intern
 # trailing _.
 GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 
+all: obj_dir/VDutCore
+
 # For simplicity and to avoid depending on Google Test's
 # implementation details, the dependencies specified below are
 # conservative and not optimized.  This is fine as Google Test
@@ -42,5 +44,3 @@ run: obj_dir/VDutCore
 
 clean:
 	rm -rf obj_dir/
-
-all: obj_dir/VDutCore

@@ -62,6 +62,10 @@ namespace riscv {
                 return (~(1 << 6) & (imm >> 1)) | (imm & 11);
         }
 
+        void nop(std::vector<uint32_t>& instructions) {
+                instructions.push_back(0x13);
+        }
+
         void lui(std::vector<uint32_t>& instructions, reg rd, uint32_t imm20) {
                 uint32_t opcode = 0b0110111;
                 instructions.push_back(imm20 << 12 | rd << 7 | opcode);
@@ -350,6 +354,8 @@ TEST_F(DutTest,LoadAddStore) {
         riscv::addi(instruction_memory,riscv::reg::x6,riscv::reg::x0,16);
         riscv::lw(instruction_memory,riscv::reg::x4,riscv::reg::x6,0);
 
+        riscv::nop(instruction_memory);
+
         riscv::add(instruction_memory,riscv::reg::x7,riscv::reg::x4,riscv::reg::x3);
 
         riscv::addi(instruction_memory,riscv::reg::x1,riscv::reg::x0,8);
@@ -371,7 +377,7 @@ TEST_F(DutTest,LoadAddStore) {
         DutCore::Options opt = { .trace_memory = false };
 
         simulate(core, m, 100, opt, tfp);
-        EXPECT_EQ(m.data_memory[2],97);
+        EXPECT_EQ(m.data_memory[2],18);
 }
 
 

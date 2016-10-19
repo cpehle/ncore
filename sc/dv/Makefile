@@ -44,3 +44,6 @@ run: obj_dir/VDutCore
 
 clean:
 	rm -rf obj_dir/
+
+test: obj_dir/VDutCore
+	./obj_dir/VDutCore

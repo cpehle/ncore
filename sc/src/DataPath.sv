@@ -73,8 +73,8 @@ module DataPath(
    MemoryState            ms, msn;
    WriteBackState         wbs, wbsn;
 
-   Bundle::RegisterFileIn rf_in;
-   Bundle::RegisterFileOut rf_out;
+
+
    logic [4:0]    dec_rs1_addr;
    logic [4:0]    dec_rs2_addr;
    logic [31:0]   exe_brjmp_target;
@@ -87,17 +87,15 @@ module DataPath(
    logic [31:0]   dec_op2_data;
    logic [31:0]   dec_rs2_data;
    logic [31:0]   mem_wb_data;
-   logic [31:0]   rf_rs1_data;
-   logic [31:0]   rf_rs2_data;
 
    // register file i/o
+   Bundle::RegisterFileOut rf_out;
+   Bundle::RegisterFileIn rf_in;
    assign rf_in.rs1_addr = dec_rs1_addr;
    assign rf_in.rs2_addr = dec_rs2_addr;
    assign rf_in.waddr = wbs.wb_addr;
    assign rf_in.wdata = wbs.wb_data;
    assign rf_in.we = wbs.ctrl_rf_wen;
-   assign rf_rs1_data = rf_out.rs1_data;
-   assign rf_rs2_data = rf_out.rs2_data;
 
    RegisterFile register_file(/*AUTOINST*/
                    // Interfaces
@@ -192,7 +190,7 @@ module DataPath(
                      (es.wb_addr  == dec_rs1_addr) && (dec_rs1_addr != 0) && es.ctrl_rf_wen  ? alu_out.data :
                      (ms.wb_addr  == dec_rs1_addr) && (dec_rs1_addr != 0) && ms.ctrl_rf_wen  ? mem_wb_data :
                      (wbs.wb_addr == dec_rs1_addr) && (dec_rs1_addr != 0) && wbs.ctrl_rf_wen ? wbs.wb_data :
-                     rf_rs1_data;
+                     rf_out.rs1_data;
 
       // op2 multiplexer
       dec_op2_data = (es.wb_addr  == dec_rs2_addr) && (dec_rs2_addr != 0) && es.ctrl_rf_wen  && (ctl.op2_sel == Bundle::OP2_RS2) ? alu_out.data :
@@ -204,7 +202,7 @@ module DataPath(
       dec_rs2_data = (es.wb_addr  == dec_rs2_addr) && es.ctrl_rf_wen  && (dec_rs2_addr != 0) ? alu_out.data :
                      (ms.wb_addr  == dec_rs2_addr) && ms.ctrl_rf_wen  && (dec_rs2_addr != 0) ? mem_wb_data :
                      (wbs.wb_addr == dec_rs2_addr) && wbs.ctrl_rf_wen && (dec_rs2_addr != 0) ? wbs.wb_data :
-                     rf_rs2_data;
+                     rf_out.rs2_data;
 
       // stall logic
       if (ctl.dec_stall && !ctl.cmiss_stall || ctl.pipeline_kill) begin

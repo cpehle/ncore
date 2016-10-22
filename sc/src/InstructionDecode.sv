@@ -1,4 +1,5 @@
-module InstructionDecode();
+`include "Bundle.sv"
+module InstructionDecode(output Bundle::RegisterFileIn rf_in, input Bundle::RegisterFileOut rf_out);
    // instruction decode stage
    // register addresses
    assign dec_rs1_addr[4:0] = ids.inst[19:15];

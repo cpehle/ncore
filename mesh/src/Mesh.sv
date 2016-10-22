@@ -33,5 +33,21 @@ package Mesh;
       logic       ready;
       Packet packet;
    } RouterOut;
+
+   typedef struct packed {
+      logic [63:0] packet;
+      logic        packet_valid;
+      logic        ready;
+      logic        ack;
+      logic [3:0]  ack_count;
+      logic        nack;
+   } ReplayBufferIn;
+
+   typedef struct packed {
+      logic [63:0] packet;
+      logic        enq;
+      logic        ready;
+   } ReplayBufferOut;
+
 endpackage
 `endif

@@ -88,21 +88,6 @@ module DataPath(
    logic [31:0]   dec_rs2_data;
    logic [31:0]   mem_wb_data;
 
-   // register file i/o
-   Bundle::RegisterFileOut rf_out;
-   Bundle::RegisterFileIn rf_in;
-   assign rf_in.rs1_addr = dec_rs1_addr;
-   assign rf_in.rs2_addr = dec_rs2_addr;
-   assign rf_in.waddr = wbs.wb_addr;
-   assign rf_in.wdata = wbs.wb_data;
-   assign rf_in.we = wbs.ctrl_rf_wen;
-
-   RegisterFile register_file(/*AUTOINST*/
-                   // Interfaces
-                   .rf_in               (rf_in),
-                   .rf_out              (rf_out),
-                   // Inputs
-                   .clk                 (clk));
 
    Bundle::AluIn alu_in;
    Bundle::AluOut alu_out;
@@ -136,10 +121,10 @@ module DataPath(
    always_comb begin
       idsn = ids;
       if (ctl.pipeline_kill) begin
-         idsn.inst = 32'b0;
+         idsn.inst = 32'h4033; // BUBBLE
       end else if (!ctl.dec_stall && !ctl.cmiss_stall) begin
          if (ctl.if_kill) begin
-            idsn.inst = 32'b0;
+            idsn.inst = 32'h4033; // BUBBLE
          end else begin
             idsn.inst = if_instruction;
          end
@@ -154,6 +139,25 @@ module DataPath(
    assign dec_rs1_addr[4:0] = ids.inst[19:15];
    assign dec_rs2_addr[4:0] = ids.inst[24:20];
    assign dec_wb_addr[4:0] = ids.inst[11:7];
+
+   // register file i/o
+   Bundle::RegisterFileOut rf_out;
+   Bundle::RegisterFileIn rf_in;
+   assign rf_in.rs1_addr = dec_rs1_addr;
+   assign rf_in.rs2_addr = dec_rs2_addr;
+   assign rf_in.waddr = wbs.wb_addr;
+   assign rf_in.wdata = wbs.wb_data;
+   assign rf_in.we = wbs.ctrl_rf_wen;
+
+   RegisterFile register_file(/*AUTOINST*/
+                              // Interfaces
+                              .rf_in               (rf_in),
+                              .rf_out              (rf_out),
+                              // Inputs
+                              .clk                 (clk));
+
+
+
    // immediate variables
    // immediates
    logic [11:0] imm_itype = ids.inst[31:20];
@@ -170,18 +174,19 @@ module DataPath(
    logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
    logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
 
+
+   // operand 2 multiplexer
+   assign dec_alu_op2[31:0] = (ctl.op2_sel == Bundle::OP2_RS2)    ? rf_out.rs2_data[31:0] :
+                       (ctl.op2_sel == Bundle::OP2_ITYPE)  ? imm_itype_sext[31:0] :
+                       (ctl.op2_sel == Bundle::OP2_STYPE)  ? imm_stype_sext[31:0] :
+                       (ctl.op2_sel == Bundle::OP2_SBTYPE) ? imm_sbtype_sext[31:0] :
+                       (ctl.op2_sel == Bundle::OP2_UTYPE)  ? imm_utype_sext[31:0] :
+                       (ctl.op2_sel == Bundle::OP2_UJTYPE) ? imm_ujtype_sext[31:0] :
+                       32'b0;
    // execute stage
    always_comb begin
       // default assignments
       esn = es;
-      // operand 2 multiplexer
-      dec_alu_op2[31:0] = (ctl.op2_sel == Bundle::OP2_RS2)    ? rf_out.rs2_data[31:0] :
-                          (ctl.op2_sel == Bundle::OP2_ITYPE)  ? imm_itype_sext[31:0] :
-                          (ctl.op2_sel == Bundle::OP2_STYPE)  ? imm_stype_sext[31:0] :
-                          (ctl.op2_sel == Bundle::OP2_SBTYPE) ? imm_sbtype_sext[31:0] :
-                          (ctl.op2_sel == Bundle::OP2_UTYPE)  ? imm_utype_sext[31:0] :
-                          (ctl.op2_sel == Bundle::OP2_UJTYPE) ? imm_ujtype_sext[31:0] :
-                          32'b0;
 
       // bypass multiplexers
       // op1 multiplexer
@@ -205,7 +210,7 @@ module DataPath(
                      rf_out.rs2_data;
 
       // stall logic
-      if (ctl.dec_stall && !ctl.cmiss_stall || ctl.pipeline_kill) begin
+      if ((ctl.dec_stall && !ctl.cmiss_stall) || ctl.pipeline_kill) begin
          // kill exe stage
          esn.inst = 0; // BUBBLE
          esn.wb_addr = 0;
@@ -249,12 +254,13 @@ module DataPath(
       es <= esn;
    end
 
+   // alu input
+   assign alu_in.op1 = es.op1_data;
+   assign alu_in.op2 = es.op2_data;
+   assign alu_in.fun = es.ctrl_alu_fun;
+
    always_comb begin
       msn = ms;
-      // alu input
-      alu_in.op1 = es.op1_data;
-      alu_in.op2 = es.op2_data;
-      alu_in.fun = es.ctrl_alu_fun;
       // branch calculation
       if (ctl.pipeline_kill) begin
          msn.pc = '0;
@@ -307,8 +313,8 @@ module DataPath(
    // external signals
    assign dat.dec_inst = ids.inst;
    assign dat.exe_br_eq = (es.op1_data == es.rs2_data);
-   assign dat.exe_br_lt = (es.op1_data < es.op2_data);
-   assign dat.exe_br_ltu = (es.op1_data < es.op2_data); //TODO(Christian): Figure unsigned compare out
+   assign dat.exe_br_lt = ($signed(es.op1_data) < $signed(es.op2_data));
+   assign dat.exe_br_ltu = (es.op1_data < es.op2_data);
    assign dat.exe_br_type = es.ctrl_br_type;
    // datapath to memory signals
    assign dmem_in.req_valid = ms.ctrl_mem_val;

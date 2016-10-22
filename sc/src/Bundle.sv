@@ -1,3 +1,4 @@
+// file: Bundle
 `ifndef _Bundle
 `define _Bundle
 package Bundle;
@@ -19,6 +20,7 @@ package Bundle;
                        } MemoryMaskType;
 
    typedef enum [2:0] {
+                       // enum: WriteBackSelect
                        WB_ALU,
                        WB_MEM,
                        WB_PC4,
@@ -37,7 +39,9 @@ package Bundle;
                        ALU_SLTU,
                        ALU_AND,
                        ALU_OR,
-                       ALU_XOR
+                       ALU_XOR,
+                       ALU_COPY_1,
+                       ALU_COPY_2
                        } AluFun;
 
    typedef enum [1:0] {

@@ -1,6 +1,8 @@
-/// @file Core.sv
-/// @author Christian Pehle
-/// @brief processor core
+// file: Core
+//
+// The processor core
+//
+//
 `include "Bundle.sv"
 module Core(input clk,
             input  reset,

@@ -40,7 +40,7 @@ module ControlPath (
       case (dat.dec_inst) inside
         // load upper immediate / add unsigned immediate program counter
         `AUIPC: cs = '{1'b1,BR_N,OP1_PC,OP2_UTYPE,OEN_0,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
-        `LUI:   cs = '{1'b1,BR_N,OP1_X ,OP2_UTYPE,OEN_0,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+        `LUI:   cs = '{1'b1,BR_N,OP1_X ,OP2_UTYPE,OEN_0,OEN_0,ALU_COPY_2,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
 
         // branch/jump instructions
         `JAL:  cs = '{1'b1,BR_J  ,OP1_RS1,OP2_UJTYPE,OEN_0,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};

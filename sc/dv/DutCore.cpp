@@ -158,19 +158,19 @@ namespace riscv {
         void sb(std::vector<uint32_t>& instructions, reg rs1, uint32_t imm, reg rs2) {
                 uint32_t opcode = 0b100011;
                 uint32_t funct3 = 0b000;
-                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
+                instructions.push_back((imm >> 5) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
         }
 
         void sh(std::vector<uint32_t>& instructions, reg rs1, uint32_t imm, reg rs2) {
                 uint32_t opcode = 0b100011;
                 uint32_t funct3 = 0b001;
-                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
+                instructions.push_back((imm >> 5) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
         }
 
         void sw(std::vector<uint32_t>& instructions, reg rs1, uint32_t imm, reg rs2) {
                 uint32_t opcode = 0b100011;
                 uint32_t funct3 = 0b010;
-                instructions.push_back((imm >> 4) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
+                instructions.push_back((imm >> 5) << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | (imm & ~(1 << 6)) << 7 | opcode);
         }
 
         void addi(std::vector<uint32_t>& instructions, reg rd, reg rs1, uint32_t imm12) {
@@ -655,6 +655,69 @@ TEST_F(DutTest,LoadAddStore) {
                 data_memory
         };
         DutCore::Options opt = { .trace_memory = false };
+
+        simulate(core, m, 100, opt, tfp);
+        EXPECT_EQ(m.data_memory[2],2+3);
+}
+
+TEST_F(DutTest,StoreWord) {
+        VDutCore* core = new VDutCore("Core");
+        Verilated::traceEverOn(true);
+        VerilatedVcdC* tfp = new VerilatedVcdC;
+        core->trace(tfp, 99);
+        tfp->open("StoreWord.vcd");
+
+        std::vector<uint32_t> instruction_memory;
+        std::vector<uint32_t> data_memory;
+
+
+        riscv::sw(instruction_memory,riscv::reg::x0,8,riscv::reg::x0);
+
+        for (int i = 0; i < 1000; i++) {
+                riscv::nop(instruction_memory);
+                data_memory.push_back(0xffff);
+        }
+
+        DutCore::Memory m = {
+                instruction_memory,
+                data_memory
+        };
+        DutCore::Options opt = { .trace_memory = true };
+
+        simulate(core, m, 100, opt, tfp);
+        EXPECT_EQ(m.data_memory[1],0);
+}
+
+
+TEST_F(DutTest,LoadAddStoreImm) {
+        VDutCore* core = new VDutCore("Core");
+        Verilated::traceEverOn(true);
+        VerilatedVcdC* tfp = new VerilatedVcdC;
+        core->trace(tfp, 99);
+        tfp->open("LoadAddStore.vcd");
+
+        std::vector<uint32_t> instruction_memory;
+        std::vector<uint32_t> data_memory;
+
+        riscv::lw(instruction_memory,riscv::reg::x3,riscv::reg::x0,4);
+        riscv::lw(instruction_memory,riscv::reg::x4,riscv::reg::x0,20);
+        riscv::add(instruction_memory,riscv::reg::x7,riscv::reg::x4,riscv::reg::x3);
+        riscv::sw(instruction_memory,riscv::reg::x0,8,riscv::reg::x7);
+
+        const uint32_t nop = 0x13;
+        for (int i = 0; i < 1000; i++) {
+                instruction_memory.push_back(nop);
+                data_memory.push_back(0);
+        }
+
+        data_memory[1] = 2;
+        data_memory[5] = 3;
+
+        DutCore::Memory m = {
+                instruction_memory,
+                data_memory
+        };
+        DutCore::Options opt = { .trace_memory = true };
 
         simulate(core, m, 100, opt, tfp);
         EXPECT_EQ(m.data_memory[2],2+3);

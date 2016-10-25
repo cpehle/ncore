@@ -1,17 +1,19 @@
-//@file DataPath.sv
-//@brief data path of one core
+/// @file DataPath.sv
+/// @author Christian Pehle
+/// @brief This module implements a five stage fixed point pipeline
+/// with bypassing.
 `include "Bundle.sv"
 module DataPath(
                 input  clk,
-                input  Bundle::ControlToData ctl,  // Control signals from control to data path
-                output Bundle::DataToControl dat,  // Signals from data path to control
-                output Bundle::MemoryIn imem_in,   // Signals from instruction memory
-                input  Bundle::MemoryOut imem_out, // Signals to instruction memory
-                output Bundle::MemoryIn dmem_in,   // Signals from data memory
-                input  Bundle::MemoryOut dmem_out  // Signals to data memory
+                input  Bundle::ControlToData ctl,  ///< Control signals from control to data path
+                output Bundle::DataToControl dat,  ///< Signals from data path to control
+                output Bundle::MemoryIn imem_in,   ///< Signals from instruction memory
+                input  Bundle::MemoryOut imem_out, ///< Signals to instruction memory
+                output Bundle::MemoryIn dmem_in,   ///< Signals from data memory
+                input  Bundle::MemoryOut dmem_out  ///< Signals to data memory
    );
-   // datapath is a five stage pipeline.
-   // the following are the pipeline registers
+
+   // The following are type declarations of pipeline registers.
    typedef struct packed {
       logic [31:0] pc; // program counter
    } InstructionFetchState;
@@ -73,8 +75,6 @@ module DataPath(
    MemoryState            ms, msn;
    WriteBackState         wbs, wbsn;
 
-
-
    logic [4:0]    dec_rs1_addr;
    logic [4:0]    dec_rs2_addr;
    logic [31:0]   exe_brjmp_target;
@@ -88,14 +88,12 @@ module DataPath(
    logic [31:0]   dec_rs2_data;
    logic [31:0]   mem_wb_data;
 
-
    Bundle::AluIn alu_in;
    Bundle::AluOut alu_out;
    Alu alu(/*AUTOINST*/
            // Interfaces
            .alu_in                      (alu_in),
            .alu_out                     (alu_out));
-
 
    assign exe_brjmp_target = es.pc + es.op2_data;
 
@@ -134,13 +132,14 @@ module DataPath(
    always_ff @(posedge clk) begin
       ids <= idsn;
    end
-   // instruction decode stage
-   // register addresses
+
+   /// Instruction Decode Stage
+   /// decode the register addresses
    assign dec_rs1_addr[4:0] = ids.inst[19:15];
    assign dec_rs2_addr[4:0] = ids.inst[24:20];
    assign dec_wb_addr[4:0] = ids.inst[11:7];
 
-   // register file i/o
+   /// Register File I/O
    Bundle::RegisterFileOut rf_out;
    Bundle::RegisterFileIn rf_in;
    assign rf_in.rs1_addr = dec_rs1_addr;
@@ -158,8 +157,8 @@ module DataPath(
 
 
 
-   // immediate variables
-   // immediates
+   /// Immediate Variables
+   /// See section 2.2 of the riscv instruction manual
    logic [11:0] imm_itype = ids.inst[31:20];
    logic [11:0] imm_stype = {ids.inst[31:25],ids.inst[11:7]};
    logic [11:0] imm_sbtype = {ids.inst[31],ids.inst[7],ids.inst[30:25],ids.inst[11:8]};
@@ -167,7 +166,7 @@ module DataPath(
    logic [19:0] imm_ujtype = {ids.inst[31], ids.inst[19:12], ids.inst[20], ids.inst[30:21]};
    logic [31:0] imm_z = {27'b0,ids.inst[19:15]};
 
-   // sign extended immediates
+   // compute sign extended immediates
    logic [31:0] imm_itype_sext  = {{20{imm_itype[11]}}, imm_itype};
    logic [31:0] imm_stype_sext  = {{20{imm_stype[11]}}, imm_stype};
    logic [31:0] imm_sbtype_sext = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
@@ -175,15 +174,16 @@ module DataPath(
    logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
 
 
-   // operand 2 multiplexer
+   /// Operand 2 Multiplexer
    assign dec_alu_op2[31:0] = (ctl.op2_sel == Bundle::OP2_RS2)    ? rf_out.rs2_data[31:0] :
-                       (ctl.op2_sel == Bundle::OP2_ITYPE)  ? imm_itype_sext[31:0] :
-                       (ctl.op2_sel == Bundle::OP2_STYPE)  ? imm_stype_sext[31:0] :
-                       (ctl.op2_sel == Bundle::OP2_SBTYPE) ? imm_sbtype_sext[31:0] :
-                       (ctl.op2_sel == Bundle::OP2_UTYPE)  ? imm_utype_sext[31:0] :
-                       (ctl.op2_sel == Bundle::OP2_UJTYPE) ? imm_ujtype_sext[31:0] :
-                       32'b0;
-   // execute stage
+                              (ctl.op2_sel == Bundle::OP2_ITYPE)  ? imm_itype_sext[31:0] :
+                              (ctl.op2_sel == Bundle::OP2_STYPE)  ? imm_stype_sext[31:0] :
+                              (ctl.op2_sel == Bundle::OP2_SBTYPE) ? imm_sbtype_sext[31:0] :
+                              (ctl.op2_sel == Bundle::OP2_UTYPE)  ? imm_utype_sext[31:0] :
+                              (ctl.op2_sel == Bundle::OP2_UJTYPE) ? imm_ujtype_sext[31:0] :
+                              32'b0;
+
+   /// Execute stage
    always_comb begin
       // default assignments
       esn = es;

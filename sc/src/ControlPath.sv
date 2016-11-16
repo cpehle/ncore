@@ -1,6 +1,6 @@
 //@file ControlPath.sv
 //@author Christian Pehle
-//@brief this implements the control path of the core
+//@brief This implements the control path of the core.
 `include "Bundle.sv"
 `include "Instructions.sv"
 module ControlPath (
@@ -15,20 +15,20 @@ module ControlPath (
 );
 
    typedef struct packed {
-      logic valid;                            // valid instruction
-      Bundle::BranchType  br_type;            // branch type
-      Bundle::Op1Sel op1_sel;                 // operand 1 select for alu
-      Bundle::Op2Sel op2_sel;                 // operand 2 select for alu
-      Bundle::RegisterOpEn rs1_oen;           // register source 1 operand enable
-      Bundle::RegisterOpEn rs2_oen;           // register source 2 operand enable
-      Bundle::AluFun  alu_fun;                // alu function select
-      Bundle::WriteBackSelect wb_sel;         // writeback select
-      Bundle::RegisterFileWriteEnable rf_wen; // register file write enable
-      Bundle::MemoryEnable mem_en;            // memory write enable
-      Bundle::MemoryWriteSignal mem_fcn;      // memory write/read signal
-      Bundle::MemoryMaskType msk_sel;         // memory mask
-      Bundle::ControlRegisterCommand csr_cmd; // control register command
-      logic fence_i;                          // thread fence
+      logic valid;                            ///< valid instruction
+      Bundle::BranchType  br_type;            ///< branch type
+      Bundle::Op1Sel op1_sel;                 ///< operand 1 select for alu
+      Bundle::Op2Sel op2_sel;                 ///< operand 2 select for alu
+      Bundle::RegisterOpEn rs1_oen;           ///< register source 1 operand enable
+      Bundle::RegisterOpEn rs2_oen;           ///< register source 2 operand enable
+      Bundle::AluFun  alu_fun;                ///< alu function select
+      Bundle::WriteBackSelect wb_sel;         ///< writeback select
+      Bundle::RegisterFileWriteEnable rf_wen; ///< register file write enable
+      Bundle::MemoryEnable mem_en;            ///< memory write enable
+      Bundle::MemoryWriteSignal mem_fcn;      ///< memory write/read signal
+      Bundle::MemoryMaskType msk_sel;         ///< memory mask
+      Bundle::ControlRegisterCommand csr_cmd; ///< control register command
+      logic fence_i;                          ///< thread fence
    } ControlSignals;
 
    ControlSignals cs_default = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
@@ -38,11 +38,11 @@ module ControlPath (
    always_comb begin
       cs = cs_default;
       case (dat.dec_inst) inside
-        // load upper immediate / add unsigned immediate program counter
+        ///< load upper immediate / add unsigned immediate program counter (section X.X)
         `AUIPC: cs = '{1'b1,BR_N,OP1_PC,OP2_UTYPE,OEN_0,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `LUI:   cs = '{1'b1,BR_N,OP1_X ,OP2_UTYPE,OEN_0,OEN_0,ALU_COPY_2,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
 
-        // branch/jump instructions
+        ///< branch/jump instructions (section X.X)
         `JAL:  cs = '{1'b1,BR_J  ,OP1_RS1,OP2_UJTYPE,OEN_0,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `JALR: cs = '{1'b1,BR_JR ,OP1_RS1,OP2_ITYPE ,OEN_1,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `BNE:  cs = '{1'b1,BR_NE ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
@@ -52,7 +52,7 @@ module ControlPath (
         `BGE:  cs = '{1'b1,BR_GE ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `BGEU: cs = '{1'b1,BR_GEU,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
 
-        // load/store instructions
+        ///< load/store instructions (section X.X)
         `LB:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B ,CSR_N,1'b0};
         `LH:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_H ,CSR_N,1'b0};
         `LW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_W ,CSR_N,1'b0};
@@ -62,7 +62,7 @@ module ControlPath (
         `SH:  cs = '{1'b1,BR_N,OP1_RS1,OP2_STYPE,OEN_1,OEN_1,ALU_ADD,WB_X  ,REN_0,MEN_1,M_XWR,MT_H ,CSR_N,1'b0};
         `SW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_STYPE,OEN_1,OEN_1,ALU_ADD,WB_X  ,REN_0,MEN_1,M_XWR,MT_W ,CSR_N,1'b0};
 
-        // immediate alu
+        ///< immediate alu (section X.X)
         `ADDI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `SLTI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SLT ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `SLTIU: cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SLTU,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
@@ -73,7 +73,7 @@ module ControlPath (
         `SRLI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SRL ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `SRAI:  cs = '{1'b1,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_SRA ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
 
-        // alu
+        ///< alu (section X.X)
         `ADD:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_ADD ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `SUB:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SUB ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `SLT:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SLT ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
@@ -107,7 +107,7 @@ module ControlPath (
       endcase // case (dat.dec_inst)
    end // always_comb
 
-   // branch logic
+   ///< Branch logic
    BranchIn branch_in = '{ctl.pipeline_kill, dat.exe_br_type, dat.exe_br_eq, imem_out.res_valid};
    BranchOut branch_out;
    Branch b(/*AUTOINST*/

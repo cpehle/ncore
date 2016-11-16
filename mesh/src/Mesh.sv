@@ -48,6 +48,5 @@ package Mesh;
       logic        enq;
       logic        ready;
    } ReplayBufferOut;
-
 endpackage
 `endif

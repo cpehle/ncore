@@ -1,4 +1,4 @@
-/// File: DutCore
+/// @file DutCore.cpp
 ///
 ///
 
@@ -6,8 +6,6 @@
 #include "verilated_vcd_c.h"
 #include "obj_dir/VDutCore.h"
 #include "gtest/gtest.h"
-
-#include <z3++.h>
 
 #include <iostream>
 #include <vector>
@@ -654,7 +652,7 @@ TEST_F(DutTest,LoadAddStore) {
                 instruction_memory,
                 data_memory
         };
-        DutCore::Options opt = { .trace_memory = false };
+        DutCore::Options opt = { .trace_memory = true };
 
         simulate(core, m, 100, opt, tfp);
         EXPECT_EQ(m.data_memory[2],2+3);
@@ -685,7 +683,7 @@ TEST_F(DutTest,StoreWord) {
         DutCore::Options opt = { .trace_memory = true };
 
         simulate(core, m, 100, opt, tfp);
-        EXPECT_EQ(m.data_memory[1],0);
+        EXPECT_EQ(m.data_memory[0],0);
 }
 
 

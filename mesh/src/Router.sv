@@ -15,17 +15,18 @@ module Router #(parameter int x = 0, parameter int y = 0) (
               input  Mesh::RouterIn c_out,
               output Mesh::RouterOut c_in
 );
+   logic [4:0]       grant;
+   logic [4:0]       request;
+
    RouterInput south(.packet_in(s_out.packet),
                      .packet_out(s_in.packet),
-                     .ready     (s_in.ready),
+                     .ready(s_in.ready),
+                     .valid(s_in.valid),
+                     .grant(grant[0]),
+                     .request(request[0]),
                      /*AUTOINST*/
-                     // Interfaces
-                     // Outputs
-                     .request           (request),
                      // Inputs
-                     .clk               (clk),
-                     .valid             (valid),
-                     .grant             (grant));
+                     .clk               (clk));
 
    RouterInput west(/*AUTOINST*/
                     // Interfaces
@@ -76,6 +77,7 @@ module Router #(parameter int x = 0, parameter int y = 0) (
                     .valid              (valid),
                     .grant              (grant));
 
-   RRArbiter arbiter();
+
+   RRArbiter #(.width(5)) arbiter(.request(),.grant());
    RouterOutput out();
 endmodule

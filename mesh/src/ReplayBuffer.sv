@@ -4,7 +4,15 @@
 ///       a packet based communication interface
 `include "Mesh.sv"
 
-module ReplayBuffer  #(parameter int buffer_size = 16, parameter int packet_width = 64) (input clk, input nreset, output Mesh::ReplayBufferOut replay_out, input Mesh::ReplayBufferIn replay_in);
+module ReplayBuffer #(
+  parameter int buffer_size = 16,
+  parameter int packet_width = 64 )
+(
+ input  clk,
+ input  nreset,
+ output Mesh::ReplayBufferOut replay_out,
+ input  Mesh::ReplayBufferIn replay_in
+);
 
    typedef struct packed {
       logic [$clog2(buffer_size)-1:0] head;
@@ -58,9 +66,6 @@ module ReplayBuffer  #(parameter int buffer_size = 16, parameter int packet_widt
          buffer <= buffern;
       end else begin
          s <= is;
-         for (int i = 0; i < buffer_size; i++) begin
-            buffer[i] <= '0;
-         end
       end
    end
 

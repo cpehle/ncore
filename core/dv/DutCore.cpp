@@ -69,24 +69,8 @@ namespace DutCore {
         }
 };
 
-namespace {
-        class DutTest : public ::testing::Test {
-        protected:
-                DutTest() {
-                }
 
-                virtual ~DutTest() {
-                }
-
-                virtual void SetUp() {
-                }
-
-                virtual void TearDown() {
-                }
-        };
-};
-
-TEST_F(DutTest,AddStore) {
+TEST(DutTest,AddStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -118,7 +102,7 @@ TEST_F(DutTest,AddStore) {
         EXPECT_EQ(m.data_memory[1],70);
 }
 
-TEST_F(DutTest,LoadStore) {
+TEST(DutTest,LoadStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -151,7 +135,7 @@ TEST_F(DutTest,LoadStore) {
 }
 
 
-TEST_F(DutTest,LoadSubStoreWithNop) {
+TEST(DutTest,LoadSubStoreWithNop) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -188,7 +172,7 @@ TEST_F(DutTest,LoadSubStoreWithNop) {
         EXPECT_EQ(m.data_memory[2],4);
 }
 
-TEST_F(DutTest,LoadSubStore) {
+TEST(DutTest,LoadSubStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -202,18 +186,24 @@ TEST_F(DutTest,LoadSubStore) {
         riscv::lw(instruction_memory,riscv::reg::x3,riscv::reg::x5,0);
         riscv::addi(instruction_memory,riscv::reg::x6,riscv::reg::x0,16);
         riscv::lw(instruction_memory,riscv::reg::x4,riscv::reg::x6,0);
+        // NOP
         riscv::sub(instruction_memory,riscv::reg::x7,riscv::reg::x4,riscv::reg::x3);
         riscv::addi(instruction_memory,riscv::reg::x1,riscv::reg::x0,8);
         riscv::sw(instruction_memory,riscv::reg::x1,0,riscv::reg::x7);
 
         const uint32_t nop = 0x13;
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10; i++) {
                 instruction_memory.push_back(nop);
                 data_memory.push_back(0);
         }
 
-        data_memory[1] = 23;
-        data_memory[4] = 10;
+        for (auto ins : instruction_memory) {
+                std::cout << std::hex << ins << std::endl;
+        }
+
+
+        data_memory[1] = 11;
+        data_memory[4] = 7;
 
         DutCore::Memory m = {
                 instruction_memory,
@@ -221,12 +211,11 @@ TEST_F(DutTest,LoadSubStore) {
         };
         DutCore::Options opt = { .trace_memory = false };
 
-        simulate(core, m, 100, opt, tfp);
-        EXPECT_EQ(m.data_memory[2],13);
+        simulate(core, m, 10, opt, tfp);
+        EXPECT_EQ(m.data_memory[2],4);
 }
 
-
-TEST_F(DutTest,LoadOrStoreWithNop) {
+TEST(DutTest,LoadOrStoreWithNop) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -263,7 +252,7 @@ TEST_F(DutTest,LoadOrStoreWithNop) {
         EXPECT_EQ(m.data_memory[2], 11 | 7);
 }
 
-TEST_F(DutTest,LoadOrStore) {
+TEST(DutTest,LoadOrStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -301,7 +290,7 @@ TEST_F(DutTest,LoadOrStore) {
 }
 
 
-TEST_F(DutTest,LoadAndStoreWithNop) {
+TEST(DutTest,LoadAndStoreWithNop) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -338,7 +327,7 @@ TEST_F(DutTest,LoadAndStoreWithNop) {
         EXPECT_EQ(m.data_memory[2], 11 & 7);
 }
 
-TEST_F(DutTest,LoadAndStore) {
+TEST(DutTest,LoadAndStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -378,7 +367,7 @@ TEST_F(DutTest,LoadAndStore) {
 
 
 
-TEST_F(DutTest,LoadAddStoreWithNop) {
+TEST(DutTest,LoadAddStoreWithNop) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -415,7 +404,7 @@ TEST_F(DutTest,LoadAddStoreWithNop) {
         EXPECT_EQ(m.data_memory[2],11 + 7);
 }
 
-TEST_F(DutTest,LoadAddStore) {
+TEST(DutTest,LoadAddStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -452,7 +441,7 @@ TEST_F(DutTest,LoadAddStore) {
         EXPECT_EQ(m.data_memory[2],2+3);
 }
 
-TEST_F(DutTest,StoreWord) {
+TEST(DutTest,StoreWord) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -481,7 +470,7 @@ TEST_F(DutTest,StoreWord) {
 }
 
 
-TEST_F(DutTest,LoadAddStoreImm) {
+TEST(DutTest,LoadAddStoreImm) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;

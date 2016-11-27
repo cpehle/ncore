@@ -2,6 +2,9 @@
 `ifndef _Bundle
 `define _Bundle
 package Bundle;
+
+   parameter logic [31:0] Bubble = 0'h4033;
+
    typedef enum [1:0] {
                  CSR_N,
                  CSR_W,

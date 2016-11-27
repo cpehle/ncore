@@ -88,12 +88,6 @@ module DataPath(
    logic [31:0]   dec_rs2_data;
    logic [31:0]   mem_wb_data;
 
-   Bundle::AluIn alu_in;
-   Bundle::AluOut alu_out;
-   Alu alu(/*AUTOINST*/
-           // Interfaces
-           .alu_in                      (alu_in),
-           .alu_out                     (alu_out));
 
    assign exe_brjmp_target = es.pc + es.op2_data;
 
@@ -116,13 +110,14 @@ module DataPath(
    assign imem_in.req_valid = 1'b1;
    assign if_instruction = imem_out.res.data;
 
+   /// instruction Decode Stage
    always_comb begin
       idsn = ids;
       if (ctl.pipeline_kill) begin
-         idsn.inst = 32'h4033; // BUBBLE
+         idsn.inst = Bundle::Bubble;
       end else if (!ctl.dec_stall && !ctl.cmiss_stall) begin
          if (ctl.if_kill) begin
-            idsn.inst = 32'h4033; // BUBBLE
+            idsn.inst = Bundle::Bubble;
          end else begin
             idsn.inst = if_instruction;
          end
@@ -133,7 +128,7 @@ module DataPath(
       ids <= idsn;
    end
 
-   /// Instruction Decode Stage
+
    /// decode the register addresses
    assign dec_rs1_addr[4:0] = ids.inst[19:15];
    assign dec_rs2_addr[4:0] = ids.inst[24:20];
@@ -154,8 +149,6 @@ module DataPath(
                               .rf_out              (rf_out),
                               // Inputs
                               .clk                 (clk));
-
-
 
    /// Immediate Variables
    /// See section 2.2 of the riscv instruction manual
@@ -212,7 +205,7 @@ module DataPath(
       // stall logic
       if ((ctl.dec_stall && !ctl.cmiss_stall) || ctl.pipeline_kill) begin
          // kill exe stage
-         esn.inst = 0; // BUBBLE
+         esn.inst = Bundle::Bubble;
          esn.wb_addr = 0;
          esn.ctrl_rf_wen = 1'b0;
          esn.ctrl_mem_val = 1'b0;
@@ -230,7 +223,7 @@ module DataPath(
          esn.ctrl_alu_fun = ctl.alu_fun;
          esn.ctrl_wb_sel = ctl.wb_sel;
          if (ctl.dec_kill) begin
-            esn.inst = 0; // BUBBLE
+            esn.inst = Bundle::Bubble;
             esn.wb_addr = 0;
             esn.ctrl_rf_wen = 1'b0;
             esn.ctrl_mem_val = 1'b0;
@@ -254,10 +247,20 @@ module DataPath(
       es <= esn;
    end
 
+   // arithmetic logic unit
+   Bundle::AluIn alu_in;
+   Bundle::AluOut alu_out;
    // alu input
    assign alu_in.op1 = es.op1_data;
    assign alu_in.op2 = es.op2_data;
    assign alu_in.fun = es.ctrl_alu_fun;
+
+
+   Alu alu(/*AUTOINST*/
+           // Interfaces
+           .alu_in                      (alu_in),
+           .alu_out                     (alu_out));
+
 
    always_comb begin
       msn = ms;

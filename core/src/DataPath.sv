@@ -19,9 +19,23 @@ module DataPath(
    } InstructionFetchState;
 
    typedef struct packed {
-      logic [31:0] pc;   // program counter
+      logic [31:0] pc;   // program  counter
       logic [31:0] inst; // instruction
    } InstructionDecodeState;
+
+   typedef struct packed {
+      logic       legal; // legal instruction
+      logic [4:0] wb_addr;      // write back address
+      logic [4:0] rs1_addr;     // address of source register 1
+      logic [4:0] rs2_addr;     // address of source register 2
+      logic [31:0] op1_data;     // operand 1 address
+      logic [31:0] op2_data;     // operand 2 address
+      logic [31:0] rs2_data;     // source register 2 data
+      logic        rfs1;
+      logic        rfs2;
+      logic        rfs3;
+   } IntegerControlSignals;
+
 
    typedef struct packed {
       logic [31:0]              pc;           // program counter
@@ -77,6 +91,7 @@ module DataPath(
 
    logic [4:0]    dec_rs1_addr;
    logic [4:0]    dec_rs2_addr;
+   logic [4:0]    dec_rs3_addr;
    logic [31:0]   exe_brjmp_target;
    logic [31:0]   exe_jump_reg_target;
    logic [31:0]   exception_target;
@@ -110,7 +125,16 @@ module DataPath(
    assign imem_in.req_valid = 1'b1;
    assign if_instruction = imem_out.res.data;
 
-   /// instruction Decode Stage
+
+   Bundle::ControlSignals id_cs;
+   InstructionDecode instruction_decode(/*AUTOINST*/
+                                        // Interfaces
+                                        .cs             (cs),
+                                        // Inputs
+                                        .if_instruction (if_instruction[31:0]));
+
+
+   // instruction decode stage
    always_comb begin
       idsn = ids;
       if (ctl.pipeline_kill) begin
@@ -128,12 +152,13 @@ module DataPath(
       ids <= idsn;
    end
 
-
    /// decode the register addresses
-   assign dec_rs1_addr[4:0] = ids.inst[19:15];
+   assign dec_rs3_addr[4:0] = ids.inst[31:27];
    assign dec_rs2_addr[4:0] = ids.inst[24:20];
+   assign dec_rs1_addr[4:0] = ids.inst[19:15];
    assign dec_wb_addr[4:0] = ids.inst[11:7];
 
+   /// Register File
    /// Register File I/O
    Bundle::RegisterFileOut rf_out;
    Bundle::RegisterFileIn rf_in;
@@ -145,10 +170,21 @@ module DataPath(
 
    RegisterFile register_file(/*AUTOINST*/
                               // Interfaces
-                              .rf_in               (rf_in),
-                              .rf_out              (rf_out),
+                              .rf_in            (rf_in),
+                              .rf_out           (rf_out),
                               // Inputs
-                              .clk                 (clk));
+                              .clk              (clk));
+
+   /// Breakpoint Unit
+   // not implemented yet
+   BreakpointUnit breakpoint_unit(/*AUTOINST*/
+                                  // Inputs
+                                  .clk                  (clk));
+
+   /// Control Status Register File
+   CSRFile csr_file(/*AUTOINST*/
+                    // Inputs
+                    .clk                (clk));
 
    /// Immediate Variables
    /// See section 2.2 of the riscv instruction manual
@@ -165,6 +201,12 @@ module DataPath(
    logic [31:0] imm_sbtype_sext = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
    logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
    logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
+
+   /// register bypassing
+   logic [4:0]  ex_waddr = es.inst[11:7];
+   logic [4:0]  mem_waddr = ms.inst[11:7];
+   logic [4:0]  wb_waddr = wbs.wb_addr;
+
 
 
    /// Operand 2 Multiplexer
@@ -255,12 +297,10 @@ module DataPath(
    assign alu_in.op2 = es.op2_data;
    assign alu_in.fun = es.ctrl_alu_fun;
 
-
    Alu alu(/*AUTOINST*/
            // Interfaces
            .alu_in                      (alu_in),
            .alu_out                     (alu_out));
-
 
    always_comb begin
       msn = ms;

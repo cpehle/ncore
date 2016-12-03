@@ -1,4 +1,8 @@
+`include "Bundle.sv"
 module Execute();
+
+   Bundle::ExecuteState es, esn;
+
    // execute stage
    always_comb begin
       // default assignments

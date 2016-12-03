@@ -5,11 +5,42 @@ package Bundle;
 
    parameter logic [31:0] Bubble = 0'h4033;
 
+   typedef enum [0:0] {
+                       N = 1'b0,
+                       Y = 1'b1
+                       } Bool;
+
+   typedef enum [3:0] {
+                       FN_X    = 4'bxxxx,
+                       FN_ADD  = 4'd0,
+                       FN_SL   = 4'd1,
+                       FN_SEQ  = 4'd2,
+                       FN_SNE  = 4'd3,
+                       FN_XOR  = 4'd4,
+                       FN_SR   = 4'd5,
+                       FN_OR   = 4'd6,
+                       FN_AND  = 4'd7,
+                       FN_SUB  = 4'd10,
+                       FN_SRA  = 4'd11,
+                       FN_SLT  = 4'd12,
+                       FN_SGE  = 4'd13,
+                       FN_SLTU = 4'd14,
+                       FN_SGEU = 4'd15
+                       } AluFn;
+
    typedef enum [1:0] {
+                       DW_32 = 2'd0,
+                       DW_64 = 2'd1,
+                       DW_XPR = 2'd2,
+                       DW_X = 2'bxx
+                       } Dw;
+
+   typedef enum [2:0] {
                  CSR_N,
                  CSR_W,
                  CSR_S,
-                 CSR_I
+                 CSR_I,
+                 CSR_C
                  } ControlRegisterCommand;
 
    typedef enum [2:0] {
@@ -54,6 +85,34 @@ package Bundle;
                        OP1_X
                        } Op1Sel;
 
+
+   typedef enum [1:0] {
+                       A2_ZERO = 0,
+                       A2_FOUR = 1,
+                       A2_IMM = 3,
+                       A2_RS2 = 2,
+                       A2_X = 2'bXX
+   } A2Sel;
+
+   typedef enum [1:0] {
+                       A1_ZERO = 0,
+                       A1_RS1 = 1,
+                       A1_PC = 2,
+                       A1_X = 2'bXX
+                       } A1Sel;
+
+
+   typedef enum [2:0] {
+                       IMM_X = 3'bxxx,
+                       IMM_S = 3'd0,
+                       IMM_SB = 3'd1,
+                       IMM_U = 3'd2,
+                       IMM_UJ = 3'd3,
+                       IMM_I = 3'd4,
+                       IMM_Z = 3'd5
+                       } ImmSel;
+
+
    typedef enum [2:0] {
                        OP2_RS2,
                        OP2_ITYPE,
@@ -67,7 +126,8 @@ package Bundle;
    typedef enum [1:0] {
                        M_XRD,
                        M_XWR,
-                       M_X
+                       M_X,
+                       M_FLUSH_ALL
                        } MemoryWriteSignal;
 
    typedef enum [0:0] {
@@ -206,5 +266,46 @@ package Bundle;
                        MEN_0,
                        MEN_1
                        } MemoryEnable;
+
+
+   typedef struct packed {
+      logic       valid;
+      logic [31:0] addr;
+   } ICacheReq;
+
+   typedef struct packed {
+      logic [31:0] data;
+      logic        data_block;
+      logic        valid;
+   } ICacheResp;
+
+
+   typedef struct  packed {
+      Bool legal;
+      Bool br;
+      Bool jal;
+      Bool jalr;
+      Bool rxs2;
+      Bool rxs1;
+      A2Sel sel_alu2;
+      A1Sel sel_alu1;
+      ImmSel sel_imm;
+      Dw alu_dw;
+      AluFn alu_fun;
+      Bool mem;
+      MemoryWriteSignal mem_cmd;
+      MemoryMaskType mem_mask_type;
+      Bool rfs1;
+      Bool rfs2;
+      Bool rfs3;
+      Bool wfd;
+      Bool div;
+      Bool wxd;
+      ControlRegisterCommand csr;
+      Bool fence_i;
+      Bool fence;
+      Bool amo;
+   } ControlSignals;
+
 endpackage // Bundle
 `endif

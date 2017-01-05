@@ -3,10 +3,10 @@ module ICache();
 // Connection to Core
 
    typedef enum {
-         ready,
-         request,
-         refill_wait,
-         refill
+         Ready,
+         Request,
+         RefillWait,
+         Refill
          } State;
 
    State s,sn;
@@ -17,12 +17,12 @@ module ICache();
    always_comb begin
       sn = s;
       case (s)
-        ready: begin
+        Ready: begin
            if (s1_miss) begin
               sn = request;
            end
         end
-        request: begin
+        Request: begin
            if (io.mem.acquire.ready) begin
               sn = refill_wait;
            end
@@ -30,12 +30,12 @@ module ICache();
               sn = ready;
            end
         end
-        refill_wait: begin
+        RefillWait: begin
            if (io.mem.grant.valid) begin
               sn = refill;
            end
         end
-        refill: begin
+        Refill: begin
            if (refill_done) begin
               sn = ready;
            end

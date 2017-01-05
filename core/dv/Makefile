@@ -1,7 +1,6 @@
 packages = Bundle.sv
 modules = Alu.sv ControlPath.sv DataPath.sv RegisterFile.sv Core.sv
 
-
 all: obj_dir/VDutCore
 
 VERILATOR_CPPFLAGS = "-I../../../third_party/include/  -I/usr/local/include"

@@ -125,13 +125,14 @@ module DataPath(
    assign imem_in.req_valid = 1'b1;
    assign if_instruction = imem_out.res.data;
 
+   logic [31:0] id_instruction = if_instruction[31:0];
 
    Bundle::ControlSignals id_cs;
    InstructionDecode instruction_decode(/*AUTOINST*/
                                         // Interfaces
-                                        .cs             (cs),
+                                        .id_cs          (id_cs),
                                         // Inputs
-                                        .if_instruction (if_instruction[31:0]));
+                                        .id_instruction (id_instruction[31:0]));
 
 
    // instruction decode stage

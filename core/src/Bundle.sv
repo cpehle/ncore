@@ -5,11 +5,6 @@ package Bundle;
 
    parameter logic [31:0] Bubble = 0'h4033;
 
-   typedef enum [0:0] {
-                       N = 1'b0,
-                       Y = 1'b1
-                       } Bool;
-
    typedef enum [3:0] {
                        FN_X    = 4'bxxxx,
                        FN_ADD  = 4'd0,
@@ -87,17 +82,17 @@ package Bundle;
 
 
    typedef enum [1:0] {
-                       A2_ZERO = 0,
-                       A2_FOUR = 1,
-                       A2_IMM = 3,
-                       A2_RS2 = 2,
+                       A2_ZERO = 2'd0,
+                       A2_FOUR = 2'd1,
+                       A2_IMM = 2'd3,
+                       A2_RS2 = 2'd2,
                        A2_X = 2'bXX
    } A2Sel;
 
    typedef enum [1:0] {
-                       A1_ZERO = 0,
-                       A1_RS1 = 1,
-                       A1_PC = 2,
+                       A1_ZERO = 2'd0,
+                       A1_RS1 = 2'd1,
+                       A1_PC = 2'd2,
                        A1_X = 2'bXX
                        } A1Sel;
 
@@ -267,45 +262,53 @@ package Bundle;
                        MEN_1
                        } MemoryEnable;
 
-
    typedef struct packed {
-      logic       valid;
-      logic [31:0] addr;
-   } ICacheReq;
-
-   typedef struct packed {
-      logic [31:0] data;
-      logic        data_block;
-      logic        valid;
-   } ICacheResp;
-
-
-   typedef struct  packed {
-      Bool legal;
-      Bool br;
-      Bool jal;
-      Bool jalr;
-      Bool rxs2;
-      Bool rxs1;
+      logic legal;
+      logic br;
+      logic jal;
+      logic jalr;
+      logic rxs2;
+      logic rxs1;
       A2Sel sel_alu2;
       A1Sel sel_alu1;
       ImmSel sel_imm;
       Dw alu_dw;
       AluFn alu_fun;
-      Bool mem;
+      logic mem;
       MemoryWriteSignal mem_cmd;
       MemoryMaskType mem_mask_type;
-      Bool rfs1;
-      Bool rfs2;
-      Bool rfs3;
-      Bool wfd;
-      Bool div;
-      Bool wxd;
+      logic rfs1;
+      logic rfs2;
+      logic rfs3;
+      logic wfd;
+      logic div;
+      logic wxd;
       ControlRegisterCommand csr;
-      Bool fence_i;
-      Bool fence;
-      Bool amo;
+      logic fence_i;
+      logic fence;
+      logic amo;
    } ControlSignals;
+
+   typedef struct packed {
+      logic [31:0] address;
+   } ICacheRequest;
+
+   typedef struct packed {
+      logic [31:0] data;
+      logic [128:0] data_block;
+   } ICacheResponse;
+
+   typedef struct packed {
+      ICacheResponse response;
+      logic       response_valid;
+      logic       invalidate;
+   } ICacheIn;
+
+   typedef struct packed {
+      ICacheRequest request;
+      logic       request_valid;
+      logic       response_ready;
+   } ICacheOut;
 
 endpackage // Bundle
 `endif

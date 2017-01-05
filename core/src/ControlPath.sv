@@ -31,6 +31,8 @@ module ControlPath (
       logic fence_i;                          ///< thread fence
    } ControlSignals;
 
+   logic    pipeline_kill;
+
    ControlSignals cs_default = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
    ControlSignals cs;
 
@@ -108,7 +110,7 @@ module ControlPath (
    end // always_comb
 
    ///< Branch logic
-   BranchIn branch_in = '{ctl.pipeline_kill, dat.exe_br_type, dat.exe_br_eq, imem_out.res_valid};
+   BranchIn branch_in = '{pipeline_kill, dat.exe_br_type, dat.exe_br_eq, imem_out.res_valid};
    BranchOut branch_out;
    Branch b(/*AUTOINST*/
             // Interfaces
@@ -177,9 +179,23 @@ module ControlPath (
 
    logic exe_inst_is_load = cs.mem_en && (cs.mem_fcn == M_XRD);
    assign cmiss_stall = !imem_out.res_valid || !((dat.mem_ctrl_dmem_val && dmem_out.res_valid) || !dat.mem_ctrl_dmem_val);
-   assign hazard_stall = (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs1_addr) && dec_rs1_oen)
-                      || (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs2_addr) && dec_rs2_oen)
-                      || (sl.exe_reg_is_csr);
+   always_comb begin
+      if (1) begin
+         hazard_stall = (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs1_addr) && dec_rs1_oen)
+                     || (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs2_addr) && dec_rs2_oen)
+                     || (sl.exe_reg_is_csr);
+      end else begin
+         hazard_stall = ((sl.exe_reg_wbaddr == dec_rs1_addr) && (dec_rs1_addr != 0) && sl.exe_reg_ctrl_rf_wen && dec_rs1_oen) ||
+                        ((sl.mem_reg_wbaddr == dec_rs1_addr) && (dec_rs1_addr != 0) && sl.mem_reg_ctrl_rf_wen && dec_rs1_oen) ||
+                        ((sl.wb_reg_wbaddr  == dec_rs1_addr) && (dec_rs1_addr != 0) && sl.wb_reg_ctrl_rf_wen && dec_rs1_oen) ||
+                        ((sl.exe_reg_wbaddr == dec_rs2_addr) && (dec_rs2_addr != 0) && sl.exe_reg_ctrl_rf_wen && dec_rs2_oen) ||
+                        ((sl.mem_reg_wbaddr == dec_rs2_addr) && (dec_rs2_addr != 0) && sl.mem_reg_ctrl_rf_wen && dec_rs2_oen) ||
+                        ((sl.wb_reg_wbaddr  == dec_rs2_addr) && (dec_rs2_addr != 0) &&  sl.wb_reg_ctrl_rf_wen && dec_rs2_oen) ||
+                        ((exe_inst_is_load) && (sl.exe_reg_wbaddr == dec_rs1_addr) && (sl.exe_reg_wbaddr != 0) && dec_rs1_oen) ||
+                        ((exe_inst_is_load) && (sl.exe_reg_wbaddr == dec_rs2_addr) && (sl.exe_reg_wbaddr != 0) && dec_rs2_oen) ||
+                        ((sl.exe_reg_is_csr));
+      end
+   end
 
    // output
    always_comb begin

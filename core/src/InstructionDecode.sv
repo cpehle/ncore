@@ -2,16 +2,25 @@
 `include "Instructions.sv"
 
 module InstructionDecode(
-                         input logic [31:0] if_instruction,
-                         output Bundle::ControlSignals cs
+                         input logic [31:0] id_instruction,
+                         output Bundle::ControlSignals id_cs
 );
 
-   Bundle::ControlSignals cs_default;
+
+
+   logic             Y = 1'b1;
+   logic             N = 1'b0;
+   logic             X = 1'bx;
+
+   Bundle::ControlSignals cs_default = '{N,X,X,X,X,X,A2_X,A1_X,IMM_X,DW_X,FN_X,N,M_X,MT_X,X,X,X,X,X,X,CSR_N,X,X,X};
+   Bundle::ControlSignals cs;
+
 
    import Bundle::*;
    always_comb begin
       cs = cs_default;
-      case (if_instruction) inside
+      case (id_instruction) inside
+        // legal br jal jalr rxs2 rxs1 sel_alu2  sel_alu1  sel_imm  alu_dw  alu_fun  mem  mem_cmd  mem_mask_type  rfs1  rfs2  rfs3  wfd  div  wxd  csr  fence_i  fence  amo
         `BNE:     cs = '{Y,Y,N,N,Y,Y,A2_RS2, A1_RS1, IMM_SB,DW_X,  FN_SNE,   N,M_X,        MT_X, N,N,N,N,N,N,CSR_N,N,N,N};
         `BEQ:     cs = '{Y,Y,N,N,Y,Y,A2_RS2, A1_RS1, IMM_SB,DW_X,  FN_SEQ,   N,M_X,        MT_X, N,N,N,N,N,N,CSR_N,N,N,N};
         `BLT:     cs = '{Y,Y,N,N,Y,Y,A2_RS2, A1_RS1, IMM_SB,DW_X,  FN_SLT,   N,M_X,        MT_X, N,N,N,N,N,N,CSR_N,N,N,N};
@@ -68,4 +77,6 @@ module InstructionDecode(
         default: cs = cs_default;
       endcase // case (dat.dec_inst)
    end // always_comb
+
+   assign id_cs = cs;
 endmodule

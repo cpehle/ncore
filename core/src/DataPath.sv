@@ -5,11 +5,11 @@
 `include "Bundle.sv"
 module DataPath(
                 input  clk,
-                input  Bundle::ControlToData ctl,  ///< Control signals from control to data path
-                output Bundle::DataToControl dat,  ///< Signals from data path to control
-                output Bundle::MemoryIn imem_in,   ///< Signals from instruction memory
+                input  Bundle::ControlToData ctl, ///< Control signals from control to data path
+                output Bundle::DataToControl dat, ///< Signals from data path to control
+                output Bundle::MemoryIn imem_in, ///< Signals from instruction memory
                 input  Bundle::MemoryOut imem_out, ///< Signals to instruction memory
-                output Bundle::MemoryIn dmem_in,   ///< Signals from data memory
+                output Bundle::MemoryIn dmem_in, ///< Signals from data memory
                 input  Bundle::MemoryOut dmem_out  ///< Signals to data memory
    );
 
@@ -22,20 +22,6 @@ module DataPath(
       logic [31:0] pc;   // program  counter
       logic [31:0] inst; // instruction
    } InstructionDecodeState;
-
-   typedef struct packed {
-      logic       legal; // legal instruction
-      logic [4:0] wb_addr;      // write back address
-      logic [4:0] rs1_addr;     // address of source register 1
-      logic [4:0] rs2_addr;     // address of source register 2
-      logic [31:0] op1_data;     // operand 1 address
-      logic [31:0] op2_data;     // operand 2 address
-      logic [31:0] rs2_data;     // source register 2 data
-      logic        rfs1;
-      logic        rfs2;
-      logic        rfs3;
-   } IntegerControlSignals;
-
 
    typedef struct packed {
       logic [31:0]              pc;           // program counter
@@ -127,12 +113,17 @@ module DataPath(
 
    logic [31:0] id_instruction = if_instruction[31:0];
 
-   Bundle::ControlSignals id_cs;
+   Bundle::ControlSignals id_cs, ex_cs, ex_csn, mem_cs, mem_csn, wb_cs, wb_csn;
+
    InstructionDecode instruction_decode(/*AUTOINST*/
                                         // Interfaces
                                         .id_cs          (id_cs),
                                         // Inputs
                                         .id_instruction (id_instruction[31:0]));
+
+
+
+
 
 
    // instruction decode stage
@@ -203,6 +194,10 @@ module DataPath(
    logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
    logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
 
+   ImmGen imm_gen();
+   BypassMux bypass_mux();
+   OpGen op_gen();
+
    /// register bypassing
    logic [4:0]  ex_waddr = es.inst[11:7];
    logic [4:0]  mem_waddr = ms.inst[11:7];
@@ -218,6 +213,10 @@ module DataPath(
                               (ctl.op2_sel == Bundle::OP2_UTYPE)  ? imm_utype_sext[31:0] :
                               (ctl.op2_sel == Bundle::OP2_UJTYPE) ? imm_ujtype_sext[31:0] :
                               32'b0;
+
+
+
+
 
    /// Execute stage
    always_comb begin
@@ -244,6 +243,10 @@ module DataPath(
                      (ms.wb_addr  == dec_rs2_addr) && ms.ctrl_rf_wen  && (dec_rs2_addr != 0) ? mem_wb_data :
                      (wbs.wb_addr == dec_rs2_addr) && wbs.ctrl_rf_wen && (dec_rs2_addr != 0) ? wbs.wb_data :
                      rf_out.rs2_data;
+
+      if (!ctl.pipeline_kill) begin
+         ex_csn = id_cs;
+      end
 
       // stall logic
       if ((ctl.dec_stall && !ctl.cmiss_stall) || ctl.pipeline_kill) begin
@@ -287,6 +290,7 @@ module DataPath(
       end // if (!ctl.dec_stall && !ctl.ccache_stall)
    end // always_comb
    always_ff @(posedge clk) begin
+      ex_cs <= ex_csn;
       es <= esn;
    end
 

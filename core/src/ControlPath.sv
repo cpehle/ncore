@@ -169,6 +169,7 @@ module ControlPath (
       sln.mem_reg_ctrl_rf_wen = sl.exe_reg_ctrl_rf_wen;
       sln.wb_reg_ctrl_rf_wen = sl.mem_reg_ctrl_rf_wen;
    end // always_comb
+
    always @(posedge clk or posedge reset) begin
       if (reset) begin
          sl <= '0;

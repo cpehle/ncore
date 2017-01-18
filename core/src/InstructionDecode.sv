@@ -6,15 +6,12 @@ module InstructionDecode(
                          output Bundle::ControlSignals id_cs
 );
 
-
-
    logic             Y = 1'b1;
    logic             N = 1'b0;
    logic             X = 1'bx;
 
    Bundle::ControlSignals cs_default = '{N,X,X,X,X,X,A2_X,A1_X,IMM_X,DW_X,FN_X,N,M_X,MT_X,X,X,X,X,X,X,CSR_N,X,X,X};
    Bundle::ControlSignals cs;
-
 
    import Bundle::*;
    always_comb begin

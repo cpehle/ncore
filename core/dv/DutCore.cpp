@@ -197,11 +197,6 @@ TEST(DutTest,LoadSubStore) {
                 data_memory.push_back(0);
         }
 
-        for (auto ins : instruction_memory) {
-                std::cout << std::hex << ins << std::endl;
-        }
-
-
         data_memory[1] = 11;
         data_memory[4] = 7;
 
@@ -435,7 +430,7 @@ TEST(DutTest,LoadAddStore) {
                 instruction_memory,
                 data_memory
         };
-        DutCore::Options opt = { .trace_memory = true };
+        DutCore::Options opt = { .trace_memory = false };
 
         simulate(core, m, 100, opt, tfp);
         EXPECT_EQ(m.data_memory[2],2+3);
@@ -498,7 +493,7 @@ TEST(DutTest,LoadAddStoreImm) {
                 instruction_memory,
                 data_memory
         };
-        DutCore::Options opt = { .trace_memory = true };
+        DutCore::Options opt = { .trace_memory = false };
 
         simulate(core, m, 100, opt, tfp);
         EXPECT_EQ(m.data_memory[2],2+3);

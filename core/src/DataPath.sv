@@ -115,12 +115,16 @@ module DataPath(
 
    Bundle::ControlSignals id_cs, ex_cs, ex_csn, mem_cs, mem_csn, wb_cs, wb_csn;
 
+
+   InstructionFetch instruction_fetch();
    InstructionDecode instruction_decode(/*AUTOINST*/
                                         // Interfaces
                                         .id_cs          (id_cs),
                                         // Inputs
                                         .id_instruction (id_instruction[31:0]));
-
+   Execute execute();
+   Memory memory();
+   WriteBack write_back();
 
 
 

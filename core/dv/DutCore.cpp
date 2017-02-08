@@ -27,6 +27,7 @@ namespace DutCore {
 
                                 // service instruction memory requests
                                 uint32_t iaddr = core->imem_in_req_addr / 4;
+
                                 core->imem_out_req_ready = 1;
                                 if (core->imem_in_req_valid) {
                                         core->imem_out_res_data = m.instruction_memory[iaddr];
@@ -386,8 +387,8 @@ TEST(DutTest,LoadAddStoreWithNop) {
                 instruction_memory.push_back(nop);
                 data_memory.push_back(0);
         }
-        data_memory[1] = 11;
-        data_memory[4] = 7;
+        data_memory[1] = 2;
+        data_memory[4] = 3;
 
         DutCore::Memory m = {
                 instruction_memory,
@@ -396,14 +397,14 @@ TEST(DutTest,LoadAddStoreWithNop) {
         DutCore::Options opt = { .trace_memory = false };
 
         simulate(core, m, 100, opt, tfp);
-        EXPECT_EQ(m.data_memory[2],11 + 7);
+        EXPECT_EQ(m.data_memory[2],2 + 3);
 }
 
 TEST(DutTest,LoadAddStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
-        core->trace(tfp, 99);
+        core->trace(tfp, 200);
         tfp->open("LoadAddStore.vcd");
 
         std::vector<uint32_t> instruction_memory;
@@ -411,7 +412,7 @@ TEST(DutTest,LoadAddStore) {
 
         riscv::addi(instruction_memory,riscv::reg::x5,riscv::reg::x0,4);
         riscv::lw(instruction_memory,riscv::reg::x3,riscv::reg::x5,0);
-        riscv::addi(instruction_memory,riscv::reg::x6,riscv::reg::x0,20);
+        riscv::addi(instruction_memory,riscv::reg::x6,riscv::reg::x0,16);
         riscv::lw(instruction_memory,riscv::reg::x4,riscv::reg::x6,0);
         riscv::add(instruction_memory,riscv::reg::x7,riscv::reg::x4,riscv::reg::x3);
         riscv::addi(instruction_memory,riscv::reg::x1,riscv::reg::x0,8);
@@ -424,15 +425,20 @@ TEST(DutTest,LoadAddStore) {
         }
 
         data_memory[1] = 2;
-        data_memory[5] = 3;
+        data_memory[4] = 3;
 
         DutCore::Memory m = {
                 instruction_memory,
                 data_memory
         };
+
         DutCore::Options opt = { .trace_memory = false };
 
-        simulate(core, m, 100, opt, tfp);
+        //        for (int i = 0; i < 8; i++) {
+        //      std::cout << std::hex << instruction_memory[i] << std::endl;
+        //        }
+
+        simulate(core, m, 1000, opt, tfp);
         EXPECT_EQ(m.data_memory[2],2+3);
 }
 
@@ -470,7 +476,7 @@ TEST(DutTest,LoadAddStoreImm) {
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
         core->trace(tfp, 99);
-        tfp->open("LoadAddStore.vcd");
+        tfp->open("LoadAddStoreImm.vcd");
 
         std::vector<uint32_t> instruction_memory;
         std::vector<uint32_t> data_memory;

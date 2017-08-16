@@ -5,7 +5,6 @@ module InstructionDecode(
                          input logic [31:0] id_instruction,
                          output Bundle::ControlSignals id_cs
 );
-
    logic             Y = 1'b1;
    logic             N = 1'b0;
    logic             X = 1'bx;
@@ -74,6 +73,22 @@ module InstructionDecode(
         default: cs = cs_default;
       endcase // case (dat.dec_inst)
    end // always_comb
-
    assign id_cs = cs;
+   
+   logic [4:0] dec_rs3_addr = inst[31:27];
+   logic [4:0] dec_rs2_addr = inst[24:20];
+   logic [4:0] dec_rs1_addr = inst[19:15];
+   logic [4:0] dec_wb_addr = inst[11:7];
+   logic [11:0] imm_itype = ids.inst[31:20];
+   logic [11:0] imm_stype = {ids.inst[31:25],ids.inst[11:7]};
+   logic [11:0] imm_sbtype = {ids.inst[31],ids.inst[7],ids.inst[30:25],ids.inst[11:8]};
+   logic [19:0] imm_utype = ids.inst[31:12];
+   logic [19:0] imm_ujtype = {ids.inst[31], ids.inst[19:12], ids.inst[20], ids.inst[30:21]};
+   logic [31:0] imm_z = {27'b0,ids.inst[19:15]};
+   logic [31:0] imm_itype_sext  = {{20{imm_itype[11]}}, imm_itype};
+   logic [31:0] imm_stype_sext  = {{20{imm_stype[11]}}, imm_stype};
+   logic [31:0] imm_sbtype_sext = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
+   logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
+   logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
+
 endmodule

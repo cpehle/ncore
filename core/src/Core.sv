@@ -1,8 +1,3 @@
-// file: Core
-//
-// The processor core
-//
-//
 `include "Bundle.sv"
 module Core(input clk,
             input  reset,
@@ -16,25 +11,25 @@ module Core(input clk,
    Bundle::DataToControl dat;
 
    ControlPath c(/*AUTOINST*/
-                 // Interfaces
-                 .ctl                   (ctl),
-                 .dat                   (dat),
-                 .imem_out              (imem_out),
-                 .imem_in               (imem_in),
-                 .dmem_out              (dmem_out),
-                 .dmem_in               (dmem_in),
-                 // Inputs
-                 .clk                   (clk),
-                 .reset                 (reset));
+		 // Interfaces
+		 .ctl			(ctl),
+		 .dat			(dat),
+		 .imem_out		(imem_out),
+		 .imem_in		(imem_in),
+		 .dmem_out		(dmem_out),
+		 .dmem_in		(dmem_in),
+		 // Inputs
+		 .clk			(clk),
+		 .reset			(reset));
 
    DataPath d(/*AUTOINST*/
-              // Interfaces
-              .ctl                      (ctl),
-              .dat                      (dat),
-              .imem_in                  (imem_in),
-              .imem_out                 (imem_out),
-              .dmem_in                  (dmem_in),
-              .dmem_out                 (dmem_out),
-              // Inputs
-              .clk                      (clk));
+	      // Interfaces
+	      .ctl			(ctl),
+	      .dat			(dat),
+	      .imem_in			(imem_in),
+	      .imem_out			(imem_out),
+	      .dmem_in			(dmem_in),
+	      .dmem_out			(dmem_out),
+	      // Inputs
+	      .clk			(clk));
 endmodule // Core

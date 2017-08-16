@@ -89,6 +89,7 @@ module DataPath(
    logic [31:0]   dec_rs2_data;
    logic [31:0]   mem_wb_data;
 
+  
 
    assign exe_brjmp_target = es.pc + es.op2_data;
 
@@ -117,12 +118,6 @@ module DataPath(
 
 
    InstructionFetch instruction_fetch();
-   InstructionDecode instruction_decode(/*AUTOINST*/
-                                        // Interfaces
-                                        .id_cs          (id_cs),
-                                        // Inputs
-                                        .id_instruction (id_instruction[31:0]));
-   Execute execute();
    Memory memory();
    WriteBack write_back();
 
@@ -198,17 +193,15 @@ module DataPath(
    logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
    logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
 
-   ImmGen imm_gen();
-   BypassMux bypass_mux();
-   OpGen op_gen();
+//  ImmGen imm_gen();
+//  BypassMux bypass_mux();
 
    /// register bypassing
    logic [4:0]  ex_waddr = es.inst[11:7];
    logic [4:0]  mem_waddr = ms.inst[11:7];
    logic [4:0]  wb_waddr = wbs.wb_addr;
 
-
-
+   
    /// Operand 2 Multiplexer
    assign dec_alu_op2[31:0] = (ctl.op2_sel == Bundle::OP2_RS2)    ? rf_out.rs2_data[31:0] :
                               (ctl.op2_sel == Bundle::OP2_ITYPE)  ? imm_itype_sext[31:0] :
@@ -217,10 +210,6 @@ module DataPath(
                               (ctl.op2_sel == Bundle::OP2_UTYPE)  ? imm_utype_sext[31:0] :
                               (ctl.op2_sel == Bundle::OP2_UJTYPE) ? imm_ujtype_sext[31:0] :
                               32'b0;
-
-
-
-
 
    /// Execute stage
    always_comb begin

@@ -16,7 +16,7 @@ module ControlPath (
 
    typedef struct packed {
       logic valid;                            ///< valid instruction
-      Bundle::BranchType  br_type;            ///< branch type
+      Bundle::BranchType br_type;             ///< branch type
       Bundle::Op1Sel op1_sel;                 ///< operand 1 select for alu
       Bundle::Op2Sel op2_sel;                 ///< operand 2 select for alu
       Bundle::RegisterOpEn rs1_oen;           ///< register source 1 operand enable

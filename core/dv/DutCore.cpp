@@ -71,7 +71,7 @@ namespace DutCore {
 };
 
 
-TEST(DutTest,AddStore) {
+TEST(Basic,AddStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -103,7 +103,7 @@ TEST(DutTest,AddStore) {
         EXPECT_EQ(m.data_memory[1],70);
 }
 
-TEST(DutTest,LoadStore) {
+TEST(Basic,LoadStore) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -135,8 +135,7 @@ TEST(DutTest,LoadStore) {
         EXPECT_EQ(m.data_memory[2],100);
 }
 
-
-TEST(DutTest,LoadSubStoreWithNop) {
+TEST(DutTestNop,LoadSubStoreWithNop) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -211,7 +210,7 @@ TEST(DutTest,LoadSubStore) {
         EXPECT_EQ(m.data_memory[2],4);
 }
 
-TEST(DutTest,LoadOrStoreWithNop) {
+TEST(DutTestNop,LoadOrStoreWithNop) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -286,7 +285,7 @@ TEST(DutTest,LoadOrStore) {
 }
 
 
-TEST(DutTest,LoadAndStoreWithNop) {
+TEST(DutTestNop,LoadAndStoreWithNop) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -363,7 +362,7 @@ TEST(DutTest,LoadAndStore) {
 
 
 
-TEST(DutTest,LoadAddStoreWithNop) {
+TEST(DutTestNop,LoadAddStoreWithNop) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -434,15 +433,11 @@ TEST(DutTest,LoadAddStore) {
 
         DutCore::Options opt = { .trace_memory = false };
 
-        //        for (int i = 0; i < 8; i++) {
-        //      std::cout << std::hex << instruction_memory[i] << std::endl;
-        //        }
-
         simulate(core, m, 1000, opt, tfp);
         EXPECT_EQ(m.data_memory[2],2+3);
 }
 
-TEST(DutTest,StoreWord) {
+TEST(Basic,StoreWord) {
         VDutCore* core = new VDutCore("Core");
         Verilated::traceEverOn(true);
         VerilatedVcdC* tfp = new VerilatedVcdC;
@@ -464,7 +459,7 @@ TEST(DutTest,StoreWord) {
                 instruction_memory,
                 data_memory
         };
-        DutCore::Options opt = { .trace_memory = true };
+        DutCore::Options opt = { .trace_memory = false };
 
         simulate(core, m, 100, opt, tfp);
         EXPECT_EQ(m.data_memory[0],0);

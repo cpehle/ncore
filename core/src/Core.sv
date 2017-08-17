@@ -31,5 +31,6 @@ module Core(input clk,
 	      .dmem_in			(dmem_in),
 	      .dmem_out			(dmem_out),
 	      // Inputs
-	      .clk			(clk));
+	      .clk			(clk),
+	      .reset			(reset));
 endmodule // Core

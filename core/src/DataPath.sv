@@ -5,6 +5,7 @@
 `include "Bundle.sv"
 module DataPath(
                 input  clk,
+		input  reset,
                 input  Bundle::ControlToData ctl, ///< Control signals from control to data path
                 output Bundle::DataToControl dat, ///< Signals from data path to control
                 output Bundle::MemoryIn imem_in, ///< Signals from instruction memory
@@ -13,7 +14,9 @@ module DataPath(
                 input  Bundle::MemoryOut dmem_out  ///< Signals to data memory
    );
 
-   // The following are type declarations of pipeline registers.
+   /// The following are type declarations of pipeline registers
+   /// There are 5 pipeline stages 
+   
    typedef struct packed {
       logic [31:0] pc; // program counter
    } InstructionFetchState;
@@ -93,7 +96,7 @@ module DataPath(
 
    assign exe_brjmp_target = es.pc + es.op2_data;
 
-   // instruction fetch stage
+   /// Instruction Fetch stage
    always_comb begin
       // default assignment
       ifsn = ifs;
@@ -105,27 +108,19 @@ module DataPath(
       end
    end
    always_ff @(posedge clk) begin
-      ifs <= ifsn;
+      if (reset) begin
+	 ifs <= '0;	 
+      end else begin
+	 ifs <= ifsn;
+      end
    end
 
    assign imem_in.req.addr = ifs.pc;
    assign imem_in.req_valid = 1'b1;
    assign if_instruction = imem_out.res.data;
 
-   logic [31:0] id_instruction = if_instruction[31:0];
 
-   Bundle::ControlSignals id_cs, ex_cs, ex_csn, mem_cs, mem_csn, wb_cs, wb_csn;
-
-
-   InstructionFetch instruction_fetch();
-   Memory memory();
-   WriteBack write_back();
-
-
-
-
-
-   // instruction decode stage
+   /// Instruction Decode Stage
    always_comb begin
       idsn = ids;
       if (ctl.pipeline_kill) begin
@@ -173,6 +168,7 @@ module DataPath(
                                   .clk                  (clk));
 
    /// Control Status Register File
+   /// not implemented yet
    CSRFile csr_file(/*AUTOINST*/
                     // Inputs
                     .clk                (clk));
@@ -192,15 +188,6 @@ module DataPath(
    logic [31:0] imm_sbtype_sext = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
    logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
    logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
-
-//  ImmGen imm_gen();
-//  BypassMux bypass_mux();
-
-   /// register bypassing
-   logic [4:0]  ex_waddr = es.inst[11:7];
-   logic [4:0]  mem_waddr = ms.inst[11:7];
-   logic [4:0]  wb_waddr = wbs.wb_addr;
-
    
    /// Operand 2 Multiplexer
    assign dec_alu_op2[31:0] = (ctl.op2_sel == Bundle::OP2_RS2)    ? rf_out.rs2_data[31:0] :
@@ -212,35 +199,44 @@ module DataPath(
                               32'b0;
 
    /// Execute stage
-   always_comb begin
-      // default assignments
-      esn = es;
+   
+   /// Bypassing
 
-      // bypass multiplexers
-      // op1 multiplexer
-      dec_op1_data = (ctl.op1_sel == Bundle::OP1_IMZ) ? imm_z :
-                     (ctl.op1_sel == Bundle::OP1_PC) ? ids.pc :
-                     (es.wb_addr  == dec_rs1_addr) && (dec_rs1_addr != 0) && es.ctrl_rf_wen  ? alu_out.data :
-                     (ms.wb_addr  == dec_rs1_addr) && (dec_rs1_addr != 0) && ms.ctrl_rf_wen  ? mem_wb_data :
-                     (wbs.wb_addr == dec_rs1_addr) && (dec_rs1_addr != 0) && wbs.ctrl_rf_wen ? wbs.wb_data :
-                     rf_out.rs1_data;
+always_comb begin
+   // bypass multiplexers
+   // op1 multiplexer
+  if (1) begin
+     dec_op1_data = (ctl.op1_sel == Bundle::OP1_IMZ) ? imm_z :
+			 (ctl.op1_sel == Bundle::OP1_PC) ? ids.pc :
+			 (es.wb_addr  == dec_rs1_addr) && (dec_rs1_addr != 0) && es.ctrl_rf_wen  ? alu_out.data :
+			 (ms.wb_addr  == dec_rs1_addr) && (dec_rs1_addr != 0) && ms.ctrl_rf_wen  ? mem_wb_data :
+			 (wbs.wb_addr == dec_rs1_addr) && (dec_rs1_addr != 0) && wbs.ctrl_rf_wen ? wbs.wb_data :
+			 rf_out.rs1_data;
 
-      // op2 multiplexer
-      dec_op2_data = (es.wb_addr  == dec_rs2_addr) && (dec_rs2_addr != 0) && es.ctrl_rf_wen  && (ctl.op2_sel == Bundle::OP2_RS2) ? alu_out.data :
-                     (ms.wb_addr  == dec_rs2_addr) && (dec_rs2_addr != 0) && ms.ctrl_rf_wen  && (ctl.op2_sel == Bundle::OP2_RS2) ? mem_wb_data :
-                     (wbs.wb_addr == dec_rs2_addr) && (dec_rs2_addr != 0) && wbs.ctrl_rf_wen && (ctl.op2_sel == Bundle::OP2_RS2) ? wbs.wb_data :
-                     dec_alu_op2;
+   // op2 multiplexer
+   dec_op2_data = (es.wb_addr  == dec_rs2_addr) && (dec_rs2_addr != 0) && es.ctrl_rf_wen  && (ctl.op2_sel == Bundle::OP2_RS2) ? alu_out.data :
+			 (ms.wb_addr  == dec_rs2_addr) && (dec_rs2_addr != 0) && ms.ctrl_rf_wen  && (ctl.op2_sel == Bundle::OP2_RS2) ? mem_wb_data :
+			 (wbs.wb_addr == dec_rs2_addr) && (dec_rs2_addr != 0) && wbs.ctrl_rf_wen && (ctl.op2_sel == Bundle::OP2_RS2) ? wbs.wb_data :
+			 dec_alu_op2;
 
-      // register 2 data
-      dec_rs2_data = (es.wb_addr  == dec_rs2_addr) && es.ctrl_rf_wen  && (dec_rs2_addr != 0) ? alu_out.data :
+   // register 2 data
+   dec_rs2_data = (es.wb_addr  == dec_rs2_addr) && es.ctrl_rf_wen  && (dec_rs2_addr != 0) ? alu_out.data :
                      (ms.wb_addr  == dec_rs2_addr) && ms.ctrl_rf_wen  && (dec_rs2_addr != 0) ? mem_wb_data :
                      (wbs.wb_addr == dec_rs2_addr) && wbs.ctrl_rf_wen && (dec_rs2_addr != 0) ? wbs.wb_data :
                      rf_out.rs2_data;
+  end else begin
+     dec_op1_data = (ctl.op1_sel == Bundle::OP1_IMZ) ? imm_z :
+		  (ctl.op1_sel == Bundle::OP1_PC) ? ids.pc : rf_out.rs1_data;
+     dec_rs2_data = rf_out.rs2_data;
+     dec_op2_data = dec_alu_op2;     
+  end 
+end
 
-      if (!ctl.pipeline_kill) begin
-         ex_csn = id_cs;
-      end
-
+   
+   ///   
+   always_comb begin
+      // default assignments
+      esn = es;      
       // stall logic
       if ((ctl.dec_stall && !ctl.cmiss_stall) || ctl.pipeline_kill) begin
          // kill exe stage
@@ -283,7 +279,6 @@ module DataPath(
       end // if (!ctl.dec_stall && !ctl.ccache_stall)
    end // always_comb
    always_ff @(posedge clk) begin
-      ex_cs <= ex_csn;
       es <= esn;
    end
 
@@ -328,8 +323,11 @@ module DataPath(
    always_ff @(posedge clk) begin
       ms <= msn;
    end
-   // write back stage
-   // writeback data mux
+   
+
+   /// Write Back Stage
+
+   /// Writeback data mux
    assign mem_wb_data = (ms.ctrl_wb_sel == Bundle::WB_ALU) ? ms.alu_out :
                         (ms.ctrl_wb_sel == Bundle::WB_PC4) ? ms.alu_out :
                         (ms.ctrl_wb_sel == Bundle::WB_MEM) ? dmem_out.res.data :
@@ -363,4 +361,14 @@ module DataPath(
    assign dmem_in.req.fcn = ms.ctrl_mem_fcn;
    assign dmem_in.req.typ = ms.ctrl_mem_typ;
    assign dmem_in.req.data = ms.rs2_data;
+
+`ifdef DEBUG_DISPLAY
+   always_comb begin
+         $display("cyc: (0x%x, 0x%x, 0x%x) WB[%c%c %x: 0x%x] %c %c", ifs.pc, ids.pc, es.pc, wbs.ctrl_rf_wen ? "M" : " ", ms.ctrl_rf_wen ? "Z" : " ", wbs.wb_addr, wbs.wb_data,
+		  ctl.cmiss_stall ? "F" : ctl.dec_stall ? "S" : " ", ctl.exe_pc_sel == 1 ? "B" : 
+		  ctl.exe_pc_sel == 2 ? "J" :
+		  ctl.exe_pc_sel == 3 ? "E" :
+		  ctl.exe_pc_sel == 0 ? " " : "?");	 
+   end
+`endif
 endmodule

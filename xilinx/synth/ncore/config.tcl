@@ -1,0 +1,12 @@
+# auto-generated file
+set PART {xc7z010clg400-1}
+set BITFILE {../../out/ncore.bit}
+read_verilog -sv {../../../core/src/Bundle.sv}
+read_verilog -sv {../../../core/src/Instructions.sv}
+read_verilog -sv {../../../core/src/Alu.sv}
+read_verilog -sv {../../../core/src/Branch.sv}
+read_verilog -sv {../../../core/src/ControlPath.sv}
+read_verilog -sv {../../../core/src/Core.sv}
+read_verilog -sv {../../../core/src/DataPath.sv}
+read_verilog -sv {../../../core/src/RegisterFile.sv}
+read_verilog -sv {../../../core/src/Top.sv}

@@ -1,2 +1,7 @@
 *.vcd
 obj_dir/*
+*~
+*#*
+bazel-*
+.DS_STORE
+.dir_locals*

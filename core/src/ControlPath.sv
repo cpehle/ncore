@@ -170,7 +170,7 @@ module ControlPath (
       sln.wb_reg_ctrl_rf_wen = sl.mem_reg_ctrl_rf_wen;
    end // always_comb
 
-   always @(posedge clk or posedge reset) begin
+   always @(posedge clk) begin
       if (reset) begin
          sl <= '0;
       end begin
@@ -178,12 +178,25 @@ module ControlPath (
       end
    end
 
-   logic exe_inst_is_load = cs.mem_en && (cs.mem_fcn == M_XRD);
+
+   logic mem_fcn_is_read = (cs.mem_fcn == M_XRD);
+   logic exe_inst_is_load = cs.mem_en && mem_fcn_is_read;
+
+   // we want to stall execution if the previous instruction was a load
+   logic exe_inst_is_load_reg;
+   always_ff @(posedge clk) begin
+      if (reset) begin
+	 exe_inst_is_load_reg <= '0;
+      end else begin
+	 exe_inst_is_load_reg <= cs.mem_en && mem_fcn_is_read;
+      end
+   end
+   
    assign cmiss_stall = !imem_out.res_valid || !((dat.mem_ctrl_dmem_val && dmem_out.res_valid) || !dat.mem_ctrl_dmem_val);
    always_comb begin
       if (1) begin
-         hazard_stall = (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs1_addr) && dec_rs1_oen)
-                     || (exe_inst_is_load && (sl.exe_reg_wbaddr == dec_rs2_addr) && dec_rs2_oen)
+         hazard_stall = (exe_inst_is_load_reg && (sl.exe_reg_wbaddr == dec_rs1_addr) && dec_rs1_oen)
+                     || (exe_inst_is_load_reg && (sl.exe_reg_wbaddr == dec_rs2_addr) && dec_rs2_oen)
                      || (sl.exe_reg_is_csr);
       end else begin
          hazard_stall = ((sl.exe_reg_wbaddr == dec_rs1_addr) && (dec_rs1_addr != 0) && sl.exe_reg_ctrl_rf_wen && dec_rs1_oen) ||

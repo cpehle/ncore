@@ -31,8 +31,6 @@ module ControlPath (
       logic fence_i;                          ///< thread fence
    } ControlSignals;
 
-   logic    pipeline_kill;
-
    ControlSignals cs_default = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
    ControlSignals cs;
 
@@ -109,23 +107,38 @@ module ControlPath (
       endcase // case (dat.dec_inst)
    end // always_comb
 
-   ///< Branch logic
-   BranchIn branch_in = '{pipeline_kill, dat.exe_br_type, dat.exe_br_eq, imem_out.res_valid};
+   /// Branch Control logic
+   BranchIn branch_in;
    BranchOut branch_out;
-   Branch b(/*AUTOINST*/
-            // Interfaces
-            .branch_in                  (branch_in),
-            .branch_out                 (branch_out));
+
+   logic pipeline_kill;
+   
+   always_comb begin
+      branch_in.pipeline_kill = pipeline_kill;
+      branch_in.br_type = dat.exe_br_type;
+      branch_in.br_eq = dat.exe_br_eq;
+      branch_in.br_lt = dat.exe_br_lt;
+      branch_in.br_ltu = dat.exe_br_ltu;
+      branch_in.imem_res_valid = imem_out.res_valid;      
+   end				 
+
+   Branch b(.fence_i			(cs.fence_i),
+	    /*AUTOINST*/
+	    // Interfaces
+	    .branch_in			(branch_in),
+	    .branch_out			(branch_out),
+	    // Inputs
+	    .clk			(clk));
    // TODO(Christian): Exception handling
 
-   // decode logic
+   /// Decode Control logic
    logic [4:0] dec_rs1_addr = dat.dec_inst[19:15];
    logic [4:0] dec_rs2_addr = dat.dec_inst[24:20];
    logic [4:0] dec_wb_addr = dat.dec_inst[11:7];
    RegisterOpEn dec_rs1_oen = branch_out.dec_kill ? OEN_0 : cs.rs1_oen;
    RegisterOpEn dec_rs2_oen = branch_out.dec_kill ? OEN_0 : cs.rs2_oen;
 
-   // stall logic
+   /// Stall Control Logic
    logic       hazard_stall; // stall because of hazard
    logic       cmiss_stall;  // stall because of cache miss
 
@@ -158,7 +171,7 @@ module ControlPath (
             sln.exe_reg_is_csr = 1'b0; // TODO
             sln.exe_reg_exception = 1'b0; // TODO
          end
-      end else if (hazard_stall && !cmiss_stall) begin // if (!hazard_stall && !cmiss_stall)
+      end else if (hazard_stall && !cmiss_stall) begin
          sln.exe_reg_wbaddr = 5'b0;
          sln.exe_reg_ctrl_rf_wen = 1'b0;
          sln.exe_reg_is_csr = 1'b0;
@@ -178,10 +191,9 @@ module ControlPath (
       end
    end
 
-
+   /// Bypassing Control Logic   
    logic mem_fcn_is_read = (cs.mem_fcn == M_XRD);
    logic exe_inst_is_load = cs.mem_en && mem_fcn_is_read;
-
    // we want to stall execution if the previous instruction was a load
    logic exe_inst_is_load_reg;
    always_ff @(posedge clk) begin
@@ -211,7 +223,7 @@ module ControlPath (
       end
    end
 
-   // output
+   /// Output
    always_comb begin
       ctl.dec_stall = hazard_stall;
       ctl.cmiss_stall = !imem_out.res_valid || !((dat.mem_ctrl_dmem_val && dmem_out.res_valid) || !dat.mem_ctrl_dmem_val);

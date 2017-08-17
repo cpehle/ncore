@@ -202,9 +202,110 @@ TEST(LSArithmetic, LoadSubStore) {
   DutCore::Options opt = {.trace_memory = false};
 
   simulate(core, m, 100, opt, tfp);
-  EXPECT_EQ(m.data_memory[2], 4);
+  EXPECT_EQ(m.data_memory[2], 11-7);
 }
 
+TEST(LSArithmetic, LoadLShiftStore) {
+  VDutCore *core = new VDutCore("Core");
+  Verilated::traceEverOn(true);
+  VerilatedVcdC *tfp = new VerilatedVcdC;
+  core->trace(tfp, 99);
+  tfp->open("LoadLShiftStore.vcd");
+
+  std::vector<uint32_t> instruction_memory;
+  std::vector<uint32_t> data_memory;
+
+  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 4);
+  riscv::lw(instruction_memory, riscv::reg::x3, riscv::reg::x5, 0);
+  riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 16);
+  riscv::lw(instruction_memory, riscv::reg::x4, riscv::reg::x6, 0);
+  riscv::sll(instruction_memory, riscv::reg::x7, riscv::reg::x4,
+             riscv::reg::x3);
+  riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
+  riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
+
+  const uint32_t nop = 0x13;
+  for (int i = 0; i < 1000; i++) {
+    instruction_memory.push_back(nop);
+    data_memory.push_back(0);
+  }
+  data_memory[1] = 11;
+  data_memory[4] = 7;
+
+  DutCore::Memory m = {instruction_memory, data_memory};
+  DutCore::Options opt = {.trace_memory = false};
+
+  simulate(core, m, 100, opt, tfp);
+  EXPECT_EQ(m.data_memory[2], 11<<7);
+}
+
+TEST(LSArithmetic, LoadRShiftStore) {
+  VDutCore *core = new VDutCore("Core");
+  Verilated::traceEverOn(true);
+  VerilatedVcdC *tfp = new VerilatedVcdC;
+  core->trace(tfp, 99);
+  tfp->open("LoadRShiftStore.vcd");
+
+  std::vector<uint32_t> instruction_memory;
+  std::vector<uint32_t> data_memory;
+
+  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 4);
+  riscv::lw(instruction_memory, riscv::reg::x3, riscv::reg::x5, 0);
+  riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 16);
+  riscv::lw(instruction_memory, riscv::reg::x4, riscv::reg::x6, 0);
+  riscv::srl(instruction_memory, riscv::reg::x7, riscv::reg::x4,
+             riscv::reg::x3);
+  riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
+  riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
+
+  const uint32_t nop = 0x13;
+  for (int i = 0; i < 1000; i++) {
+    instruction_memory.push_back(nop);
+    data_memory.push_back(0);
+  }
+  data_memory[1] = 11;
+  data_memory[4] = 7;
+
+  DutCore::Memory m = {instruction_memory, data_memory};
+  DutCore::Options opt = {.trace_memory = false};
+
+  simulate(core, m, 100, opt, tfp);
+  EXPECT_EQ(m.data_memory[2], 11>>7);
+}
+
+TEST(LSArithmetic, LoadXorStore) {
+  VDutCore *core = new VDutCore("Core");
+  Verilated::traceEverOn(true);
+  VerilatedVcdC *tfp = new VerilatedVcdC;
+  core->trace(tfp, 99);
+  tfp->open("LoadXorStore.vcd");
+
+  std::vector<uint32_t> instruction_memory;
+  std::vector<uint32_t> data_memory;
+
+  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 4);
+  riscv::lw(instruction_memory, riscv::reg::x3, riscv::reg::x5, 0);
+  riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 16);
+  riscv::lw(instruction_memory, riscv::reg::x4, riscv::reg::x6, 0);
+  riscv::xor_op(instruction_memory, riscv::reg::x7, riscv::reg::x4,
+             riscv::reg::x3);
+  riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
+  riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
+
+  const uint32_t nop = 0x13;
+  for (int i = 0; i < 1000; i++) {
+    instruction_memory.push_back(nop);
+    data_memory.push_back(0);
+  }
+  data_memory[1] = 11;
+  data_memory[4] = 7;
+
+  DutCore::Memory m = {instruction_memory, data_memory};
+  DutCore::Options opt = {.trace_memory = false};
+
+  simulate(core, m, 100, opt, tfp);
+  EXPECT_EQ(m.data_memory[2], 11^7);
+}
 
 
 TEST(LSArithmeticWithNop, LoadOrStoreWithNop) {
@@ -454,7 +555,8 @@ TEST(BranchNop, UnconditionalBranch) {
   std::vector<uint32_t> instruction_memory;
   std::vector<uint32_t> data_memory;
 
-  riscv::jal(instruction_memory, riscv::reg::x0, 20);
+  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 20);
+  riscv::jal(instruction_memory, riscv::reg::x5, 0);
   riscv::nop(instruction_memory);
   riscv::nop(instruction_memory);
 

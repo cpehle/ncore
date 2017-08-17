@@ -5,6 +5,10 @@ package Bundle;
 
    parameter logic [31:0] Bubble = 0'h4033;
 
+   parameter int 	  fetchWidth = 4;
+   parameter int 	  opaqueBits = 10;
+   
+   
    typedef enum [3:0] {
                        FN_X    = 4'bxxxx,
                        FN_ADD  = 4'd0,
@@ -187,6 +191,30 @@ package Bundle;
       logic        mem_ctrl_dmem_val;
    } DataToControl;
 
+   typedef struct packed {
+      logic 	  xx;
+   } BTBEntry;
+
+   typedef struct packed {
+      logic [31:0] addr;
+      logic 	   valid;
+   } BTBRequest;
+
+   typedef struct  packed {
+      logic [5:0]  history;
+      logic [1:0]  value;
+   } BHTResp;
+      
+   typedef struct packed {
+      logic taken;
+      logic [fetchWidth-1:0] mask;
+      logic [$clog2(fetchWidth)-1:0] bridx;
+      logic [31:0] target;
+      logic [opaqueBits-1:0] entry;
+      BHTResp bht;
+      logic valid;
+   } BTBResponse;
+           
    typedef struct  packed {
       logic [31:0] addr;
       logic [31:0] data;
@@ -248,6 +276,8 @@ package Bundle;
       logic       pipeline_kill;
       logic [3:0] br_type;
       logic       br_eq;
+      logic 	  br_lt;
+      logic 	  br_ltu;      
       logic       imem_res_valid;
    } BranchIn;
 

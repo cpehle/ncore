@@ -183,6 +183,28 @@ namespace riscv {
                 instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | rd << 7 | opcode);
         }
 
+	void xor_op(std::vector<uint32_t>& instructions, reg rd, reg rs2, reg rs1) {
+                uint32_t opcode = 0b0110011;
+                uint32_t funct7 = 0b0000000;
+                uint32_t funct3 = 0b100;
+                instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | rd << 7 | opcode);
+        }
+
+	void sll(std::vector<uint32_t>& instructions, reg rd, reg rs2, reg rs1) {
+                uint32_t opcode = 0b0110011;
+                uint32_t funct7 = 0b0000000;
+                uint32_t funct3 = 0b001;
+                instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | rd << 7 | opcode);
+        }
+
+	void srl(std::vector<uint32_t>& instructions, reg rd, reg rs2, reg rs1) {
+                uint32_t opcode = 0b0110011;
+                uint32_t funct7 = 0b0000000;
+                uint32_t funct3 = 0b101;
+                instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 | rd << 7 | opcode);
+        }
+
+
         void land(std::vector<uint32_t>& instructions, reg rd, reg rs2, reg rs1) {
                 uint32_t opcode = 0b0110011;
                 uint32_t funct7 = 0b0000000;

@@ -136,7 +136,7 @@ TEST(Basic, LoadStore) {
   EXPECT_EQ(m.data_memory[2], 100);
 }
 
-TEST(DutTestNop, LoadSubStoreWithNop) {
+TEST(LSArithmeticWithNop, LoadSubStoreWithNop) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -171,7 +171,7 @@ TEST(DutTestNop, LoadSubStoreWithNop) {
   EXPECT_EQ(m.data_memory[2], 4);
 }
 
-TEST(DutTest, LoadSubStore) {
+TEST(LSArithmetic, LoadSubStore) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -185,29 +185,29 @@ TEST(DutTest, LoadSubStore) {
   riscv::lw(instruction_memory, riscv::reg::x3, riscv::reg::x5, 0);
   riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 16);
   riscv::lw(instruction_memory, riscv::reg::x4, riscv::reg::x6, 0);
-  // NOP
   riscv::sub(instruction_memory, riscv::reg::x7, riscv::reg::x4,
              riscv::reg::x3);
   riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
   riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
 
   const uint32_t nop = 0x13;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 1000; i++) {
     instruction_memory.push_back(nop);
     data_memory.push_back(0);
   }
-
   data_memory[1] = 11;
   data_memory[4] = 7;
 
   DutCore::Memory m = {instruction_memory, data_memory};
   DutCore::Options opt = {.trace_memory = false};
 
-  simulate(core, m, 10, opt, tfp);
+  simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(m.data_memory[2], 4);
 }
 
-TEST(DutTestNop, LoadOrStoreWithNop) {
+
+
+TEST(LSArithmeticWithNop, LoadOrStoreWithNop) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -242,7 +242,7 @@ TEST(DutTestNop, LoadOrStoreWithNop) {
   EXPECT_EQ(m.data_memory[2], 11 | 7);
 }
 
-TEST(DutTest, LoadOrStore) {
+TEST(LSArithmetic, LoadOrStore) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -277,7 +277,7 @@ TEST(DutTest, LoadOrStore) {
   EXPECT_EQ(m.data_memory[2], 11 | 7);
 }
 
-TEST(DutTestNop, LoadAndStoreWithNop) {
+TEST(LSArithmeticWithNop, LoadAndStoreWithNop) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -312,7 +312,7 @@ TEST(DutTestNop, LoadAndStoreWithNop) {
   EXPECT_EQ(m.data_memory[2], 11 & 7);
 }
 
-TEST(DutTest, LoadAndStore) {
+TEST(LSArithmetic, LoadAndStore) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -347,7 +347,7 @@ TEST(DutTest, LoadAndStore) {
   EXPECT_EQ(m.data_memory[2], 11 & 7);
 }
 
-TEST(DutTestNop, LoadAddStoreWithNop) {
+TEST(LSArithmeticWithNop, LoadAddStoreWithNop) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -384,7 +384,7 @@ TEST(DutTestNop, LoadAddStoreWithNop) {
   EXPECT_EQ(m.data_memory[2], 2 + 3);
 }
 
-TEST(DutTest, LoadAddStore) {
+TEST(LSArithmetic, LoadAddStore) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
   VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -442,38 +442,6 @@ TEST(Basic, StoreWord) {
 
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(0, m.data_memory[0]);
-}
-
-TEST(DutTest, LoadAddStoreImm) {
-  VDutCore *core = new VDutCore("Core");
-  Verilated::traceEverOn(true);
-  VerilatedVcdC *tfp = new VerilatedVcdC;
-  core->trace(tfp, 99);
-  tfp->open("LoadAddStoreImm.vcd");
-
-  std::vector<uint32_t> instruction_memory;
-  std::vector<uint32_t> data_memory;
-
-  riscv::lw(instruction_memory, riscv::reg::x3, riscv::reg::x0, 4);
-  riscv::lw(instruction_memory, riscv::reg::x4, riscv::reg::x0, 20);
-  riscv::add(instruction_memory, riscv::reg::x7, riscv::reg::x4,
-             riscv::reg::x3);
-  riscv::sw(instruction_memory, riscv::reg::x0, 8, riscv::reg::x7);
-
-  const uint32_t nop = 0x13;
-  for (int i = 0; i < 1000; i++) {
-    instruction_memory.push_back(nop);
-    data_memory.push_back(0);
-  }
-
-  data_memory[1] = 2;
-  data_memory[5] = 3;
-
-  DutCore::Memory m = {instruction_memory, data_memory};
-  DutCore::Options opt = {.trace_memory = false};
-
-  simulate(core, m, 100, opt, tfp);
-  EXPECT_EQ(m.data_memory[2], 2 + 3);
 }
 
 TEST(BranchNop, UnconditionalBranch) {

@@ -366,10 +366,11 @@ module DataPath(
    always_comb begin
       dat.dec_inst = ids.inst;
       dat.exe_br_eq = (es.op1_data == es.rs2_data);
-      dat.exe_br_lt = ($signed(es.op1_data) < $signed(es.op2_data));
-      dat.exe_br_ltu = (es.op1_data < es.op2_data);
+      dat.exe_br_lt = ($signed(es.op1_data) < $signed(es.rs2_data));
+      dat.exe_br_ltu = (es.op1_data < es.rs2_data);
       dat.exe_br_type = es.ctrl_br_type;
    end
+   
    // datapath to memory signals
    always_comb begin
       dmem_in.req_valid = ms.ctrl_mem_val;

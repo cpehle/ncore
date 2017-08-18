@@ -34,7 +34,16 @@ module ControlPath (
    ControlSignals cs_default = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
    ControlSignals cs;
 
-   import Bundle::*;
+   import Bundle::*;   
+   BranchIn branch_in;
+   BranchOut branch_out;
+
+   logic pipeline_kill = 1'b0;
+
+   logic [4:0] dec_rs1_addr;
+   logic [4:0] dec_rs2_addr;
+   logic [4:0] dec_wb_addr;
+ 
    always_comb begin
       cs = cs_default;
       case (dat.dec_inst) inside
@@ -45,8 +54,8 @@ module ControlPath (
         ///< branch/jump instructions (section X.X)
         `JAL:  cs = '{1'b1,BR_J  ,OP1_RS1,OP2_UJTYPE,OEN_0,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `JALR: cs = '{1'b1,BR_JR ,OP1_RS1,OP2_ITYPE ,OEN_1,OEN_0,ALU_X,WB_PC4,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
+	`BEQ:  cs = '{1'b1,BR_EQ ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `BNE:  cs = '{1'b1,BR_NE ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
-        `BEQ:  cs = '{1'b1,BR_EQ ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `BLT:  cs = '{1'b1,BR_LT ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `BLTU: cs = '{1'b1,BR_LTU,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `BGE:  cs = '{1'b1,BR_GE ,OP1_RS1,OP2_SBTYPE,OEN_1,OEN_1,ALU_X,WB_X  ,REN_0,MEN_0,M_X,MT_X,CSR_N,1'b0};
@@ -105,23 +114,20 @@ module ControlPath (
         `FENCE:   cs = cs_default;
         default: cs = cs_default;
       endcase // case (dat.dec_inst)
-   end // always_comb
+      
 
-   /// Branch Control logic
-   BranchIn branch_in;
-   BranchOut branch_out;
-
-   logic pipeline_kill;
-   
-   always_comb begin
       branch_in.pipeline_kill = pipeline_kill;
       branch_in.br_type = dat.exe_br_type;
       branch_in.br_eq = dat.exe_br_eq;
       branch_in.br_lt = dat.exe_br_lt;
-      branch_in.br_ltu = dat.exe_br_ltu;
-      branch_in.imem_res_valid = imem_out.res_valid;      
-   end				 
+      branch_in.br_ltu = dat.exe_br_ltu;      
+      branch_in.imem_res_valid = imem_out.res_valid;
+      dec_rs1_addr = dat.dec_inst[19:15];
+      dec_rs2_addr = dat.dec_inst[24:20];
+      dec_wb_addr = dat.dec_inst[11:7];
+   end // always_comb
 
+   /// Branch Control logic
    Branch b(.fence_i			(cs.fence_i),
 	    /*AUTOINST*/
 	    // Interfaces
@@ -132,9 +138,7 @@ module ControlPath (
    // TODO(Christian): Exception handling
 
    /// Decode Control logic
-   logic [4:0] dec_rs1_addr = dat.dec_inst[19:15];
-   logic [4:0] dec_rs2_addr = dat.dec_inst[24:20];
-   logic [4:0] dec_wb_addr = dat.dec_inst[11:7];
+
    RegisterOpEn dec_rs1_oen = branch_out.dec_kill ? OEN_0 : cs.rs1_oen;
    RegisterOpEn dec_rs2_oen = branch_out.dec_kill ? OEN_0 : cs.rs2_oen;
 

@@ -521,6 +521,81 @@ TEST(LSArithmetic, LoadAddStore) {
   EXPECT_EQ(2 + 3, m.data_memory[2]);
 }
 
+TEST(LSArithmetic, LoadSRAStore) {
+  VDutCore *core = new VDutCore("Core");
+  Verilated::traceEverOn(true);
+  VerilatedVcdC *tfp = new VerilatedVcdC;
+  core->trace(tfp, 200);
+  tfp->open("LoadSRAStore.vcd");
+
+  std::vector<uint32_t> instruction_memory;
+  std::vector<uint32_t> data_memory;
+
+  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 4);
+  riscv::lw(instruction_memory, riscv::reg::x3, riscv::reg::x5, 0);
+  riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 16);
+  riscv::lw(instruction_memory, riscv::reg::x4, riscv::reg::x6, 0);
+  riscv::sra(instruction_memory, riscv::reg::x7, riscv::reg::x4,
+             riscv::reg::x3);
+  riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
+  riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
+
+  const uint32_t nop = 0x13;
+  for (int i = 0; i < 1000; i++) {
+    instruction_memory.push_back(nop);
+    data_memory.push_back(0);
+  }
+
+  data_memory[1] = 0xff;
+  data_memory[4] = 3;
+
+  DutCore::Memory m = {instruction_memory, data_memory};
+
+  DutCore::Options opt = {.trace_memory = false};
+
+  simulate(core, m, 1000, opt, tfp);
+  EXPECT_EQ(0xff >> 3, m.data_memory[2]);
+}
+
+TEST(LSArithmetic, LoadSRLStore) {
+  VDutCore *core = new VDutCore("Core");
+  Verilated::traceEverOn(true);
+  VerilatedVcdC *tfp = new VerilatedVcdC;
+  core->trace(tfp, 200);
+  tfp->open("LoadSRAStore.vcd");
+
+  std::vector<uint32_t> instruction_memory;
+  std::vector<uint32_t> data_memory;
+
+  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 4);
+  riscv::lw(instruction_memory, riscv::reg::x3, riscv::reg::x5, 0);
+  riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 16);
+  riscv::lw(instruction_memory, riscv::reg::x4, riscv::reg::x6, 0);
+  riscv::srl(instruction_memory, riscv::reg::x7, riscv::reg::x4,
+             riscv::reg::x3);
+  riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
+  riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
+
+  const uint32_t nop = 0x13;
+  for (int i = 0; i < 1000; i++) {
+    instruction_memory.push_back(nop);
+    data_memory.push_back(0);
+  }
+
+  data_memory[1] = 0xff;
+  data_memory[4] = 3;
+
+  DutCore::Memory m = {instruction_memory, data_memory};
+
+  DutCore::Options opt = {.trace_memory = false};
+
+  simulate(core, m, 1000, opt, tfp);
+  EXPECT_EQ(0xff >> 3, m.data_memory[2]);
+}
+
+
+
+
 TEST(Basic, StoreWord) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
@@ -612,8 +687,6 @@ TEST(Branch, BranchEQ) {
              riscv::reg::x6);
   riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
   riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
-
-  // std::cout << std::bitset<32>(instruction_memory[4]) << std::endl;
 
   const uint32_t nop = 0x13;
   for (int i = 0; i < 1000; i++) {
@@ -711,7 +784,6 @@ TEST(Branch, BranchLT) {
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(30 + 80, m.data_memory[2]);
   EXPECT_EQ(0, m.data_memory[1]);
-
 }
 
 TEST(Branch, BranchGT) {
@@ -726,7 +798,7 @@ TEST(Branch, BranchGT) {
 
   riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 99);
   riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 22);
-  riscv::bge(instruction_memory, riscv::reg::x5, riscv::reg::x6, 5*4);
+  riscv::bge(instruction_memory, riscv::reg::x5, riscv::reg::x6, 5 * 4);
   /// code should be jumped over
   riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 30);
   riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 40);
@@ -741,7 +813,6 @@ TEST(Branch, BranchGT) {
              riscv::reg::x6);
   riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
   riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
-
 
   const uint32_t nop = 0x13;
   for (int i = 0; i < 1000; i++) {

@@ -113,12 +113,12 @@ package Bundle;
 
 
    typedef enum [2:0] {
-                       OP2_RS2,
-                       OP2_ITYPE,
-                       OP2_STYPE,
-                       OP2_SBTYPE,
-                       OP2_UTYPE,
-                       OP2_UJTYPE,
+                       OP2_RS2,   // 000
+                       OP2_ITYPE, // 001
+                       OP2_STYPE, // 010
+                       OP2_SBTYPE,// 011
+                       OP2_UTYPE, // 100
+                       OP2_UJTYPE,// 101
                        OP2_X
                        } Op2Sel;
 

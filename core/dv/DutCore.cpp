@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <vector>
+#include <bitset>
 
 namespace DutCore {
 struct Memory {
@@ -542,7 +543,7 @@ TEST(Basic, StoreWord) {
   DutCore::Options opt = {.trace_memory = false};
 
   simulate(core, m, 100, opt, tfp);
-  EXPECT_EQ(0, m.data_memory[0]);
+  EXPECT_EQ(0, m.data_memory[2]);
 }
 
 TEST(BranchNop, UnconditionalBranch) {
@@ -555,23 +556,32 @@ TEST(BranchNop, UnconditionalBranch) {
   std::vector<uint32_t> instruction_memory;
   std::vector<uint32_t> data_memory;
 
-  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 20);
-  riscv::jal(instruction_memory, riscv::reg::x5, 0);
-  riscv::nop(instruction_memory);
-  riscv::nop(instruction_memory);
-
+  riscv::jal(instruction_memory, riscv::reg::x0, 4 * 5);
+  /// code should be jumped over
+  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 30);
+  riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 40);
+  riscv::add(instruction_memory, riscv::reg::x7, riscv::reg::x5,
+             riscv::reg::x6);
+  riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 4);
+  riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
+  /// this code should be executed
+  riscv::addi(instruction_memory, riscv::reg::x5, riscv::reg::x0, 30);
+  riscv::addi(instruction_memory, riscv::reg::x6, riscv::reg::x0, 80);
+  riscv::add(instruction_memory, riscv::reg::x7, riscv::reg::x5,
+             riscv::reg::x6);
+  riscv::addi(instruction_memory, riscv::reg::x1, riscv::reg::x0, 8);
+  riscv::sw(instruction_memory, riscv::reg::x1, 0, riscv::reg::x7);
+  
   const uint32_t nop = 0x13;
   for (int i = 0; i < 1000; i++) {
     instruction_memory.push_back(nop);
     data_memory.push_back(0);
   }
-
-  data_memory[1] = 2;
-  data_memory[5] = 3;
-
+  
   DutCore::Memory m = {instruction_memory, data_memory};
   DutCore::Options opt = {.trace_memory = false};
 
   simulate(core, m, 100, opt, tfp);
-  EXPECT_EQ(m.data_memory[0], 0);
+  EXPECT_EQ(0, m.data_memory[1]);
+  EXPECT_EQ(30+80, m.data_memory[2]);
 }

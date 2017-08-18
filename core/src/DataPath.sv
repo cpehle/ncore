@@ -90,9 +90,6 @@ module DataPath(
    logic [31:0]   dec_op2_data;
    logic [31:0]   dec_rs2_data;
    logic [31:0]   mem_wb_data;
-
-   assign exe_brjmp_target = es.pc + es.op2_data;
-   assign exe_jump_reg_target = alu_out.data;
    
    /// Instruction Fetch stage
    always_comb begin
@@ -145,11 +142,13 @@ module DataPath(
    /// Register File I/O
    Bundle::RegisterFileOut rf_out;
    Bundle::RegisterFileIn rf_in;
-   assign rf_in.rs1_addr = dec_rs1_addr;
-   assign rf_in.rs2_addr = dec_rs2_addr;
-   assign rf_in.waddr = wbs.wb_addr;
-   assign rf_in.wdata = wbs.wb_data;
-   assign rf_in.we = wbs.ctrl_rf_wen;
+   always_comb begin
+      rf_in.rs1_addr = dec_rs1_addr;
+      rf_in.rs2_addr = dec_rs2_addr;
+      rf_in.waddr = wbs.wb_addr;
+      rf_in.wdata = wbs.wb_data;
+      rf_in.we = wbs.ctrl_rf_wen;
+   end
 
    RegisterFile register_file(/*AUTOINST*/
 			      // Interfaces
@@ -172,20 +171,33 @@ module DataPath(
 
    /// Immediate Variables
    /// See section 2.2 of the riscv instruction manual
-   logic [11:0] imm_itype = ids.inst[31:20];
-   logic [11:0] imm_stype = {ids.inst[31:25],ids.inst[11:7]};
-   logic [11:0] imm_sbtype = {ids.inst[31],ids.inst[7],ids.inst[30:25],ids.inst[11:8]};
-   logic [19:0] imm_utype = ids.inst[31:12];
-   logic [19:0] imm_ujtype = {ids.inst[31], ids.inst[19:12], ids.inst[20], ids.inst[30:21]};
-   logic [31:0] imm_z = {27'b0,ids.inst[19:15]};
-
-   /// Compute sign extended immediates
-   logic [31:0] imm_itype_sext  = {{20{imm_itype[11]}}, imm_itype};
-   logic [31:0] imm_stype_sext  = {{20{imm_stype[11]}}, imm_stype};
-   logic [31:0] imm_sbtype_sext = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
-   logic [31:0] imm_utype_sext  = {imm_utype, 12'b0};
-   logic [31:0] imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
-
+   logic [11:0] imm_itype;
+   logic [11:0] imm_stype;
+   logic [11:0] imm_sbtype;
+   logic [19:0] imm_utype;
+   logic [19:0] imm_ujtype;
+   logic [31:0] imm_z;
+   logic [31:0] imm_itype_sext;  
+   logic [31:0] imm_stype_sext; 
+   logic [31:0] imm_sbtype_sext; 
+   logic [31:0] imm_utype_sext;  
+   logic [31:0] imm_ujtype_sext;
+ 
+   always_comb begin
+      imm_itype = ids.inst[31:20];
+      imm_stype = {ids.inst[31:25],ids.inst[11:7]};
+      imm_sbtype = {ids.inst[31],ids.inst[7],ids.inst[30:25],ids.inst[11:8]};
+      imm_utype = ids.inst[31:12];
+      imm_ujtype = {ids.inst[31], ids.inst[19:12], ids.inst[20], ids.inst[30:21]};
+      imm_z = {27'b0,ids.inst[19:15]};
+      /// Compute sign extended immediates
+      imm_itype_sext = {{20{imm_itype[11]}}, imm_itype};
+      imm_stype_sext = {{20{imm_stype[11]}}, imm_stype};
+      imm_sbtype_sext = {{19{imm_sbtype[11]}}, imm_sbtype, 1'b0};
+      imm_utype_sext = {imm_utype, 12'b0};
+      imm_ujtype_sext = {{11{imm_ujtype[19]}}, imm_ujtype, 1'b0};
+   end
+      
    /// Operand 2 Multiplexer
    assign dec_alu_op2[31:0] = (ctl.op2_sel == Bundle::OP2_RS2)    ? rf_out.rs2_data[31:0] :
 			      (ctl.op2_sel == Bundle::OP2_ITYPE)  ? imm_itype_sext[31:0] :
@@ -196,7 +208,7 @@ module DataPath(
 			      32'b0;
 
    /// Execute stage
-
+   
    /// Bypassing
    always_comb begin
       if (1) begin
@@ -232,6 +244,9 @@ module DataPath(
    always_comb begin
       // default assignments
       esn = es;
+      exe_brjmp_target = es.pc + es.op2_data;
+      exe_jump_reg_target = alu_out.data;
+      
       // stall logic
       if ((ctl.dec_stall && !ctl.cmiss_stall) || ctl.pipeline_kill) begin
 	 // kill exe stage
@@ -281,10 +296,12 @@ module DataPath(
    Bundle::AluIn alu_in;
    Bundle::AluOut alu_out;
    // alu input
-   assign alu_in.op1 = es.op1_data;
-   assign alu_in.op2 = es.op2_data;
-   assign alu_in.fun = es.ctrl_alu_fun;
-
+   always_comb begin
+      alu_in.op1 = es.op1_data;
+      alu_in.op2 = es.op2_data;
+      alu_in.fun = es.ctrl_alu_fun;
+   end
+      
    Alu alu(/*AUTOINST*/
 	   // Interfaces
 	   .alu_in                      (alu_in),
@@ -292,6 +309,7 @@ module DataPath(
 
    /// Memory Stage
    always_comb begin
+      // default assignment
       msn = ms;
       // branch calculation
       if (ctl.pipeline_kill) begin
@@ -330,6 +348,7 @@ module DataPath(
 			ms.alu_out;
 
    always_comb begin
+      // default assignment
       wbsn = wbs;
       if (!ctl.cmiss_stall) begin
 	 wbsn.wb_addr = ms.wb_addr;
@@ -352,15 +371,17 @@ module DataPath(
       dat.exe_br_type = es.ctrl_br_type;
    end
    // datapath to memory signals
-   assign dmem_in.req_valid = ms.ctrl_mem_val;
-   assign dmem_in.req.addr = ms.alu_out;
-   assign dmem_in.req.fcn = ms.ctrl_mem_fcn;
-   assign dmem_in.req.typ = ms.ctrl_mem_typ;
-   assign dmem_in.req.data = ms.rs2_data;
+   always_comb begin
+      dmem_in.req_valid = ms.ctrl_mem_val;
+      dmem_in.req.addr = ms.alu_out;
+      dmem_in.req.fcn = ms.ctrl_mem_fcn;
+      dmem_in.req.typ = ms.ctrl_mem_typ;
+      dmem_in.req.data = ms.rs2_data;
+   end
 
    always_comb begin
       if (0) begin
-	 $display("cyc: (0x%x, 0x%x, 0x%x) WB[%c%c %x: 0x%x] %c %c", ifs.pc, ids.pc, es.pc, wbs.ctrl_rf_wen ? "M" : " ", ms.ctrl_rf_wen ? "Z" : " ", wbs.wb_addr, wbs.wb_data,
+	 $display("cyc %b: (0x%x, 0x%x, 0x%x) WB[%c%c %x: 0x%x] %c %c", reset, ifs.pc, ids.pc, es.pc, wbs.ctrl_rf_wen ? "M" : " ", ms.ctrl_rf_wen ? "Z" : " ", wbs.wb_addr, wbs.wb_data,
 		  ctl.cmiss_stall ? "F" : ctl.dec_stall ? "S" : " ", ctl.exe_pc_sel == 1 ? "B" :
 		  ctl.exe_pc_sel == 2 ? "J" :
 		  ctl.exe_pc_sel == 3 ? "E" :

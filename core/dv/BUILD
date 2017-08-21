@@ -1,6 +1,6 @@
 cc_test(
 	name = "dut_core_test",	
-	srcs = ["DutCore.cpp"],
+	srcs = ["DutCore.cpp", "test_combinators.hpp"],
 	deps = [":dut_core", ":riscv", "@gtest//:main"],
 )
 

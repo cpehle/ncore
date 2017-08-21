@@ -87,7 +87,7 @@ void nop(std::vector<uint32_t> &instructions) { instructions.push_back(0x13); }
 
 void lui(std::vector<uint32_t> &instructions, reg rd, uint32_t imm20) {
   uint32_t opcode = 0b0110111;
-  instructions.push_back(imm20 << 12 | rd << 7 | opcode);
+  instructions.push_back(imm20 >> 12 | rd << 7 | opcode);
 }
 
 void auipc(std::vector<uint32_t> &instructions, reg rd, uint32_t imm20) {
@@ -294,4 +294,10 @@ void lxor(std::vector<uint32_t> &instructions, reg rd, reg rs2, reg rs1) {
   instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 |
                          rd << 7 | opcode);
 }
+
+void li(std::vector<uint32_t> &instructions, reg rd, uint32_t imm) {
+   addi(instructions, rd, reg::x0, imm);
+   lui(instructions, rd, imm);
+}
+
 }

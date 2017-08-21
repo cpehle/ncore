@@ -1,8 +1,8 @@
+`include "Bundle.sv"
 module BranchTargetBuffer(
-			  BTBRequest req,			
+			  input Bundle::BTBRequest req
 );
+
 endmodule // BranchTargetBuffer
 
-module BranchHistoryTable();
-endmodule // BranchHistoryTable
 

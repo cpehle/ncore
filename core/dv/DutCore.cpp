@@ -3,6 +3,8 @@
 #include "verilated_vcd_c.h"
 #include "gtest/gtest.h"
 
+#include "test_combinators.hpp"
+
 #include "riscv.h"
 
 #include <bitset>
@@ -593,9 +595,6 @@ TEST(LSArithmetic, LoadSRLStore) {
   EXPECT_EQ(0xff >> 3, m.data_memory[2]);
 }
 
-
-
-
 TEST(Basic, StoreWord) {
   VDutCore *core = new VDutCore("Core");
   Verilated::traceEverOn(true);
@@ -827,3 +826,102 @@ TEST(Branch, BranchGT) {
   EXPECT_EQ(0, m.data_memory[1]);
   EXPECT_EQ(30 + 80, m.data_memory[2]);
 }
+
+namespace add {
+
+struct test_triple {
+  uint64_t result;
+  uint64_t value1;
+  uint64_t value2;
+};
+
+std::vector<test_triple> arithmetic_tests = {
+  {0x00000000, 0x00000000, 0x00000000},
+  {0x00000000, 0x00000000, 0x00000000},
+  {0x00000002, 0x00000001, 0x00000001},
+  {0x0000000a, 0x00000003, 0x00000007},
+  {0xffffffffffff8000, 0x0000000000000000, 0xffffffffffff8000},
+  {0xffffffff80000000, 0xffffffff80000000, 0x00000000},
+  {0xffffffff7fff8000, 0xffffffff80000000, 0xffffffffffff8000},
+  {0x0000000000007fff, 0x0000000000000000, 0x0000000000007fff},
+  //{0x000000007fffffff, 0x000000007fffffff, 0x0000000000000000},
+  //{0x0000000080007ffe, 0x000000007fffffff, 0x0000000000007fff},
+  {0xffffffff80007fff, 0xffffffff80000000, 0x0000000000007fff},
+  // {0x000000007fff7fff, 0x000000007fffffff, 0xffffffffffff8000},
+  {0xffffffffffffffff, 0x0000000000000000, 0xffffffffffffffff},
+  // {0x0000000000000000, 0xffffffffffffffff, 0x0000000000000001},
+  // {0xfffffffffffffffe, 0xffffffffffffffff, 0xffffffffffffffff},
+  {0x0000000080000000, 0x0000000000000001, 0x000000007fffffff},
+};
+}
+
+TEST(Arithmetic, Add) {
+  for (auto t : add::arithmetic_tests) {
+    VDutCore *core = new VDutCore("Core");
+    Verilated::traceEverOn(true);
+    VerilatedVcdC *tfp = new VerilatedVcdC;
+    core->trace(tfp, 99);
+    tfp->open("ArithmeticAdd.vcd");
+
+    std::vector<uint32_t> instruction_memory;
+    std::vector<uint32_t> data_memory;
+    tc::test_rr_op(instruction_memory, &riscv::add, t.result, t.value1, t.value2, 32);
+    
+    const uint32_t nop = 0x13;
+    for (int i = 0; i < 1000; i++) {
+      instruction_memory.push_back(nop);
+      data_memory.push_back(0xfefefefe);
+    }
+
+    DutCore::Memory m = {instruction_memory, data_memory};
+    DutCore::Options opt = {.trace_memory = false};
+
+    simulate(core, m, 100, opt, tfp);
+    EXPECT_EQ(0xfefefefe, m.data_memory[1]);
+    EXPECT_EQ(110, m.data_memory[2]);
+  }
+}
+
+namespace land {
+struct test_triple {
+  uint64_t result;
+  uint64_t value1;
+  uint64_t value2;
+};
+
+std::vector<test_triple> arithmetic_tests = {
+  {0xff & 0xf0, 0xff, 0xf0},
+  // {0x0f000f00, 0xff00ff00, 0x0f0f0f0f},
+  // {0x00f000f0, 0x0ff00ff0, 0xf0f0f0f0},
+  // {0x000f000f, 0x00ff00ff, 0x0f0f0f0f},
+  // {0xf000f000, 0xf00ff00f, 0xf0f0f0f0},
+};
+}
+
+TEST(Arithmetic, LAnd) {
+  for (auto t : land::arithmetic_tests) {
+    VDutCore *core = new VDutCore("Core");
+    Verilated::traceEverOn(true);
+    VerilatedVcdC *tfp = new VerilatedVcdC;
+    core->trace(tfp, 99);
+    tfp->open("ArithmeticAnd.vcd");
+
+    std::vector<uint32_t> instruction_memory;
+    std::vector<uint32_t> data_memory;
+    tc::test_rr_op(instruction_memory, &riscv::land, t.result, t.value1, t.value2, 32);
+    
+    const uint32_t nop = 0x13;
+    for (int i = 0; i < 1000; i++) {
+      instruction_memory.push_back(nop);
+      data_memory.push_back(0xfefefefe);
+    }
+
+    DutCore::Memory m = {instruction_memory, data_memory};
+    DutCore::Options opt = {.trace_memory = false};
+
+    simulate(core, m, 100, opt, tfp);
+    EXPECT_EQ(0xfefefefe, m.data_memory[1]);
+    EXPECT_EQ(110, m.data_memory[2]);
+  }
+}
+

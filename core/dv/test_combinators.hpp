@@ -11,7 +11,7 @@ uint64_t mask_xlen(uint64_t x, uint32_t xlen) {
 
 uint64_t sext_imm(uint64_t x) { return ((x) | (-(((x) >> 11) & 1) << 11)); }
 
-void insert_nops(std::vector<uint32_t> ins, int n) {
+void insert_nops(std::vector<uint32_t>& ins, int n) {
   for (int i = 0; i < n; i++) {
     riscv::nop(ins);
   }
@@ -56,9 +56,6 @@ void test_imm_src1_eq_dest(std::vector<uint32_t> &i,
   test_result(i, riscv::reg::x1, result, xlen);
 }
   
-
-  
-
 // tests for instructions with register-register operands
 void test_rr_op(std::vector<uint32_t> &i,
                 void(ins)(std::vector<uint32_t> &, riscv::reg, riscv::reg,
@@ -82,8 +79,8 @@ void test_rr_src1_eq_dest(std::vector<uint32_t> &i,
   test_result(i, riscv::reg::x1, result, xlen);
 }
 
-void test_rr_src2_eq_dest(std::vector<uint32_t> i,
-                          void(ins)(std::vector<uint32_t>, riscv::reg,
+void test_rr_src2_eq_dest(std::vector<uint32_t>& i,
+                          void(ins)(std::vector<uint32_t>&, riscv::reg,
                                     riscv::reg, riscv::reg),
                           uint64_t result, uint64_t val1, uint64_t val2,
                           uint32_t xlen = 32) {
@@ -93,8 +90,8 @@ void test_rr_src2_eq_dest(std::vector<uint32_t> i,
   test_result(i, riscv::reg::x2, result, xlen);
 }
 
-void test_rr_src12_eq_dest(std::vector<uint32_t> i,
-                           void(ins)(std::vector<uint32_t>, riscv::reg,
+void test_rr_src12_eq_dest(std::vector<uint32_t>& i,
+                           void(ins)(std::vector<uint32_t>&, riscv::reg,
                                      riscv::reg, riscv::reg),
                            uint64_t result, uint64_t val1, uint32_t xlen = 32) {
   riscv::lui(i, riscv::reg::x1, mask_xlen(val1, xlen));
@@ -102,8 +99,8 @@ void test_rr_src12_eq_dest(std::vector<uint32_t> i,
   test_result(i, riscv::reg::x1, result, xlen);
 }
 
-void test_rr_dest_bypass(std::vector<uint32_t> i, uint32_t nop_cycles,
-                         void(inst)(std::vector<uint32_t>, riscv::reg,
+void test_rr_dest_bypass(std::vector<uint32_t>& i, uint32_t nop_cycles,
+                         void(inst)(std::vector<uint32_t>&, riscv::reg,
                                     riscv::reg, riscv::reg),
                          uint64_t result, uint64_t val1, uint64_t val2,
                          uint32_t xlen = 32) {
@@ -115,7 +112,7 @@ void test_rr_dest_bypass(std::vector<uint32_t> i, uint32_t nop_cycles,
   insert_nops(i, nop_cycles);
   riscv::addi(i, riscv::reg::x6, riscv::reg::x30, 0);
   riscv::addi(i, riscv::reg::x4, riscv::reg::x4, 1);
-  riscv::lui(i, riscv::reg::x5, 2);
+  riscv::addi(i, riscv::reg::x5, riscv::reg::x0, 2);
   riscv::bne(i, riscv::x4, riscv::x5, -6 * 4 - nop_cycles * 4);
   test_result(i, riscv::reg::x6, result, xlen);
 }

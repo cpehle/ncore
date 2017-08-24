@@ -6,13 +6,16 @@ module Branch(
               output Bundle::BranchOut branch_out
 );
    import Bundle::*;
-   // Branch logic
 
    logic 	     fence_i_reg;
-   always_ff @(posedge clk) begin
-      fence_i_reg <= fence_i;      
-   end
 
+   Register #(.width(1)) fenci_reg(.out(fence_i_reg),
+				   .in(fence_i),
+				   /*AUTOINST*/
+				   // Inputs
+				   .clk			(clk));
+   
+   
    PcSel pc_sel_reg;
    always_ff @(posedge clk) begin
       pc_sel_reg <= branch_in.pipeline_kill ? PC_EXC :
@@ -27,7 +30,6 @@ module Branch(
 		    (branch_in.br_type == BR_JR) ?  PC_JALR : PC_4;
    end
    
-   // TODO
    always_comb begin
       branch_out.pc_sel   = branch_in.pipeline_kill ? PC_EXC :
 			    (branch_in.br_type == BR_N) ? PC_4 :
@@ -42,5 +44,5 @@ module Branch(
       branch_out.if_kill  = (branch_out.pc_sel != PC_4) /* || !branch_in.imem_res_valid */ || fence_i || fence_i_reg;   
       branch_out.dec_kill = (branch_out.pc_sel != PC_4);
    end
-endmodule // Branch
+endmodule
 

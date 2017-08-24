@@ -1,8 +1,4 @@
-// file: TLB
-//
-// Translation Lookaside Buffer
 module TLB();
-
 
    typedef struct packed {
       logic []    ppn;
@@ -27,10 +23,5 @@ module TLB();
          TLB_WAIT_INVALIDATE
    } State;
 
-   ///< state register
    State s, sn;
-
-
-
-
 endmodule

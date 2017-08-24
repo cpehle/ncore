@@ -2,8 +2,7 @@
 module top(
 	   input clk,
 	   input reset
-);
-   
+);   
    Core c(/*AUTOINST*/
 	  // Interfaces
 	  .imem_out			(imem_out),
@@ -12,6 +11,5 @@ module top(
 	  .dmem_in			(dmem_in),
 	  // Inputs
 	  .clk				(clk),
-	  .reset			(reset));
-   
+	  .reset			(reset));   
 endmodule

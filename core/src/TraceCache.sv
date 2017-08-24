@@ -1,3 +1,2 @@
-module TraceCache(
-);
-endmodule // TraceCache
+module TraceCache();
+endmodule

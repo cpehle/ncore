@@ -1,3 +1,9 @@
+py_binary(
+	name = "core_ex",
+	srcs = ["core_ex.py"],
+	deps = [":libcore"],
+)
+
 cc_test(
 	name = "branch",	
 	srcs = ["test/add.cpp"],
@@ -38,6 +44,28 @@ cc_library(
 	hdrs = ["test_combinators.hpp"],
 	deps = [":riscv"],
 )    
+
+py_library(
+    name = "libcore",
+    data = [":libcore.so"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "libcore.so",
+    srcs = [
+        "core.cpp",
+    ],
+    linkshared = 1,
+    linkstatic = 1,
+    copts = ["-std=c++14", "-fvisibility=hidden"],
+    deps = [
+        ":dut_core",
+        "//util/python:python_headers",
+        "@pybind11//:pybind11_cxx",
+    ],
+)
 
 cc_library(
     name = "dut_core",

@@ -6,6 +6,14 @@ new_http_archive(
     strip_prefix = "googletest-release-1.7.0",
 )
 
+new_http_archive(
+    name = "pybind11",
+    url = "https://github.com/pybind/pybind11/archive/master.zip",
+    sha256 = "",
+    build_file = "pybind11.BUILD",
+    strip_prefix = "pybind11-master",
+)
+
 git_repository(
     name = "verilator",
     remote = "https://github.com/cpehle/verilator",

@@ -40,22 +40,43 @@ void simulate(VDutCore *core, Memory &m, const size_t N, const Options opt,
 
       core->imem_out_req_ready = 1;
       if (core->imem_in_req_valid) {
-        core->imem_out_res_data = m.instruction_memory[iaddr];
-        core->imem_out_res_valid = 1;
+        if (iaddr >= m.instruction_memory.size()) {
+          core->imem_out_res_data = 0x13;
+          core->imem_out_res_valid = 1;
+          std::cout << "fetch out of bound instruction" << std::endl;
+        } else {
+          core->imem_out_res_data = m.instruction_memory[iaddr];
+          core->imem_out_res_valid = 1;
+        }
       }
 
       // service data memory requests
       uint32_t daddr = core->dmem_in_req_addr / 4;
       core->dmem_out_req_ready = 1;
       if (core->dmem_in_req_valid) {
-        switch (core->dmem_in_req_fcn) {
-        case 0x0:
-          core->dmem_out_res_data = m.data_memory[daddr];
-          core->dmem_out_res_valid = 1;
-          break;
-        case 0x1:
-          m.data_memory[daddr] = core->dmem_in_req_data;
-          break;
+        if (daddr >= m.data_memory.size()) {
+          std::cout << "out of bound data memory" << std::endl;
+          switch (core->dmem_in_req_fcn) {
+          case 0x0:
+	    std::cout << "read" << std::endl;
+            core->dmem_out_res_data = 0;
+            core->dmem_out_res_valid = 1;
+            break;
+          case 0x1:
+	    std::cout << "write" << std::endl;
+	    // do nothing
+            break;
+          }
+        } else {
+          switch (core->dmem_in_req_fcn) {
+          case 0x0:
+            core->dmem_out_res_data = m.data_memory[daddr];
+            core->dmem_out_res_valid = 1;
+            break;
+          case 0x1:
+            m.data_memory[daddr] = core->dmem_in_req_data;
+            break;
+          }
         }
       }
 
@@ -79,7 +100,7 @@ void simulate(VDutCore *core, Memory &m, const size_t N, const Options opt,
   }
   core->final();
 }
-};
+}
 
 TEST(Basic, AddStore) {
   VDutCore *core = new VDutCore("Core");
@@ -138,6 +159,30 @@ TEST(Basic, LoadStore) {
 
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(m.data_memory[2], 100);
+}
+
+TEST(Basic, LoadImmediate) {
+  VDutCore *core = new VDutCore("Core");
+  Verilated::traceEverOn(true);
+  VerilatedVcdC *tfp = new VerilatedVcdC;
+  core->trace(tfp, 99);
+  tfp->open("LoadImmediate.vcd");
+  std::vector<uint32_t> instruction_memory;
+  std::vector<uint32_t> data_memory;
+
+  riscv::li(instruction_memory, riscv::reg::x3, 1 << 12 | 1);
+  const uint32_t nop = 0x13;
+  for (int i = 0; i < 1000; i++) {
+    instruction_memory.push_back(nop);
+    data_memory.push_back(i);
+  }
+
+  data_memory[1] = 100;
+
+  DutCore::Memory m = {instruction_memory, data_memory};
+  DutCore::Options opt = {.trace_memory = false};
+
+  simulate(core, m, 100, opt, tfp);
 }
 
 TEST(LSArithmeticWithNop, LoadSubStoreWithNop) {
@@ -558,6 +603,7 @@ TEST(LSArithmetic, LoadSRAStore) {
 
   simulate(core, m, 1000, opt, tfp);
   EXPECT_EQ(0xff >> 3, m.data_memory[2]);
+  tfp->close();
 }
 
 TEST(LSArithmetic, LoadSRLStore) {
@@ -594,6 +640,7 @@ TEST(LSArithmetic, LoadSRLStore) {
 
   simulate(core, m, 1000, opt, tfp);
   EXPECT_EQ(0xff >> 3, m.data_memory[2]);
+  tfp->close();
 }
 
 TEST(Basic, StoreWord) {
@@ -618,6 +665,7 @@ TEST(Basic, StoreWord) {
 
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(0, m.data_memory[2]);
+  tfp->close();
 }
 
 TEST(Branch, UnconditionalBranch) {
@@ -658,6 +706,7 @@ TEST(Branch, UnconditionalBranch) {
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(0, m.data_memory[1]);
   EXPECT_EQ(30 + 80, m.data_memory[2]);
+  tfp->close();
 }
 
 TEST(Branch, BranchEQ) {
@@ -700,6 +749,7 @@ TEST(Branch, BranchEQ) {
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(0, m.data_memory[1]);
   EXPECT_EQ(30 + 80, m.data_memory[2]);
+  tfp->close();
 }
 
 TEST(Branch, BranchNE) {
@@ -742,6 +792,7 @@ TEST(Branch, BranchNE) {
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(0, m.data_memory[1]);
   EXPECT_EQ(30 + 80, m.data_memory[2]);
+  tfp->close();
 }
 
 TEST(Branch, BranchLT) {
@@ -784,6 +835,7 @@ TEST(Branch, BranchLT) {
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(30 + 80, m.data_memory[2]);
   EXPECT_EQ(0, m.data_memory[1]);
+  tfp->close();
 }
 
 TEST(Branch, BranchGT) {
@@ -826,6 +878,7 @@ TEST(Branch, BranchGT) {
   simulate(core, m, 100, opt, tfp);
   EXPECT_EQ(0, m.data_memory[1]);
   EXPECT_EQ(30 + 80, m.data_memory[2]);
+  tfp->close();
 }
 
 namespace add {
@@ -858,7 +911,7 @@ struct test_nops_binop {
 };
 
 std::vector<test_unop> same_source_tests = {
-    {26, 13},
+    {26, 13}, {24, 12}, {8, 4},
 };
 
 std::vector<test_binop> arithmetic_tests = {
@@ -881,9 +934,7 @@ std::vector<test_binop> arithmetic_tests = {
 };
 
 std::vector<test_nop_binop> dest_bypass_tests = {
-  {0, {24, 13, 11}},
-  {1, {25, 14, 11}},
-  {2, {26, 15, 11}},
+    {0, {24, 13, 11}}, {1, {25, 14, 11}}, {2, {26, 15, 11}},
 };
 
 std::vector<test_nops_binop> src12_bypass_tests = {
@@ -917,6 +968,7 @@ TEST(Arithmetic, Add) {
     simulate(core, m, 100, opt, tfp);
     EXPECT_EQ(0xfefefefe, m.data_memory[1]);
     EXPECT_EQ(110, m.data_memory[2]);
+    tfp->close();
   }
 }
 
@@ -947,6 +999,7 @@ TEST(Arithmetic, AddSrc1EqDest) {
     simulate(core, m, 100, opt, tfp);
     EXPECT_EQ(0xfefefefe, m.data_memory[1]);
     EXPECT_EQ(110, m.data_memory[2]);
+    tfp->close();
   }
 }
 
@@ -975,6 +1028,7 @@ TEST(Arithmetic, AddSrc2EqDest) {
     simulate(core, m, 100, opt, tfp);
     EXPECT_EQ(0xfefefefe, m.data_memory[1]);
     EXPECT_EQ(110, m.data_memory[2]);
+    tfp->close();
   }
 }
 
@@ -1003,6 +1057,7 @@ TEST(Arithmetic, AddSrc12EqDest) {
     simulate(core, m, 100, opt, tfp);
     EXPECT_EQ(0xfefefefe, m.data_memory[1]);
     EXPECT_EQ(110, m.data_memory[2]);
+    tfp->close();
   }
 }
 
@@ -1032,6 +1087,37 @@ TEST(Arithmetic, AddDestBypass) {
     EXPECT_EQ(0xfefefefe, m.data_memory[1]);
     EXPECT_EQ(110, m.data_memory[2]);
     core->final();
+    tfp->close();
+  }
+}
+
+TEST(Arithmetic, AddSrc12BypassTest) {
+  for (auto t : add::src12_bypass_tests) {
+    VDutCore *core = new VDutCore("Core");
+    Verilated::traceEverOn(true);
+    VerilatedVcdC *tfp = new VerilatedVcdC;
+    core->trace(tfp, 99);
+    tfp->open("ArithmeticAddSrc12Bypass.vcd");
+
+    std::vector<uint32_t> instruction_memory;
+    std::vector<uint32_t> data_memory;
+    tc::test_rr_src12_bypass(instruction_memory, t.nop1, t.nop2, &riscv::add,
+                             t.binop.result, t.binop.value1, t.binop.value2,
+                             32);
+
+    const uint32_t nop = 0x13;
+    for (int i = 0; i < 1000; i++) {
+      instruction_memory.push_back(nop);
+      data_memory.push_back(0xfefefefe);
+    }
+
+    DutCore::Memory m = {instruction_memory, data_memory};
+    DutCore::Options opt = {.trace_memory = false};
+
+    simulate(core, m, 100, opt, tfp);
+    EXPECT_EQ(0xfefefefe, m.data_memory[1]);
+    EXPECT_EQ(110, m.data_memory[2]);
+    tfp->close();
   }
 }
 
@@ -1044,6 +1130,8 @@ struct test_triple {
 
 std::vector<test_triple> arithmetic_tests = {
     {0xff & 0xf0, 0xff, 0xf0},
+    {0x0f & 0xf0, 0x0f, 0xf0},
+    {0xf0f & 0xff0, 0xf0f, 0xff0},
     // {0x0f000f00, 0xff00ff00, 0x0f0f0f0f},
     // {0x00f000f0, 0x0ff00ff0, 0xf0f0f0f0},
     // {0x000f000f, 0x00ff00ff, 0x0f0f0f0f},
@@ -1057,7 +1145,7 @@ TEST(Arithmetic, LAnd) {
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticAnd.vcd");
+    tfp->open("ArithmeticLAnd.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
@@ -1076,5 +1164,7 @@ TEST(Arithmetic, LAnd) {
     simulate(core, m, 100, opt, tfp);
     EXPECT_EQ(0xfefefefe, m.data_memory[1]);
     EXPECT_EQ(110, m.data_memory[2]);
+
+    tfp->close();
   }
 }

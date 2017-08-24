@@ -43,7 +43,7 @@ uint32_t bits(uint32_t imm, int start, int number) {
   uint32_t mask = 0xffffffff;
   return (imm >> start) & (mask >> (32 - number));
 }
-  
+
 // imm[20] imm[10:1] imm[11] imm[19:12]
 uint32_t imm_ujtype(uint32_t imm) {
   uint32_t imm_20 = (imm >> 20) & 0x1;
@@ -53,11 +53,12 @@ uint32_t imm_ujtype(uint32_t imm) {
   return (imm_20 << 19) | (imm_10_1 << 9) | (imm_11 << 8) | imm_19_12;
 }
 
+uint32_t imm_utype(uint32_t imm) { return bits(imm, 12, 20); }
+
 struct branch_offset {
   uint32_t upper;
   uint32_t lower;
 };
-
 
 branch_offset offset_branch(uint32_t imm) {
   uint32_t imm_12 = bits(imm, 12, 1);
@@ -87,7 +88,7 @@ void nop(std::vector<uint32_t> &instructions) { instructions.push_back(0x13); }
 
 void lui(std::vector<uint32_t> &instructions, reg rd, uint32_t imm20) {
   uint32_t opcode = 0b0110111;
-  instructions.push_back(imm20 >> 12 | rd << 7 | opcode);
+  instructions.push_back(imm_utype(imm20) << 12 | rd << 7 | opcode);
 }
 
 void auipc(std::vector<uint32_t> &instructions, reg rd, uint32_t imm20) {
@@ -113,8 +114,8 @@ void beq(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
   uint32_t opcode = 0b1100011;
   uint32_t func3 = 0b000;
   auto offset = offset_branch(imm13);
-  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 | func3 << 12 |
-                         offset.lower << 7 | opcode);
+  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 |
+                         func3 << 12 | offset.lower << 7 | opcode);
 }
 
 void bne(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
@@ -122,8 +123,8 @@ void bne(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
   uint32_t opcode = 0b1100011;
   uint32_t func3 = 0b001;
   auto offset = offset_branch(imm13);
-  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 | func3 << 12 |
-                         offset.lower << 7 | opcode);
+  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 |
+                         func3 << 12 | offset.lower << 7 | opcode);
 }
 
 void blt(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
@@ -131,8 +132,8 @@ void blt(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
   uint32_t opcode = 0b1100011;
   uint32_t func3 = 0b100;
   auto offset = offset_branch(imm13);
-  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 | func3 << 12 |
-                         offset.lower << 7 | opcode);
+  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 |
+                         func3 << 12 | offset.lower << 7 | opcode);
 }
 
 void bge(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
@@ -140,8 +141,8 @@ void bge(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
   uint32_t opcode = 0b1100011;
   uint32_t func3 = 0b101;
   auto offset = offset_branch(imm13);
-  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 | func3 << 12 |
-                         offset.lower << 7 | opcode);  
+  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 |
+                         func3 << 12 | offset.lower << 7 | opcode);
 }
 
 void bltu(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
@@ -149,8 +150,8 @@ void bltu(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
   uint32_t opcode = 0b0010111;
   uint32_t func3 = 0b110;
   auto offset = offset_branch(imm13);
-  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 | func3 << 12 |
-                         offset.lower << 7 | opcode);  
+  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 |
+                         func3 << 12 | offset.lower << 7 | opcode);
 }
 
 void bgeu(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
@@ -158,8 +159,8 @@ void bgeu(std::vector<uint32_t> &instructions, reg rs1, reg rs2,
   uint32_t opcode = 0b0010111;
   uint32_t func3 = 0b111;
   auto offset = offset_branch(imm13);
-  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 | func3 << 12 |
-                         offset.lower << 7 | opcode);
+  instructions.push_back(offset.upper << 25 | rs2 << 20 | rs1 << 15 |
+                         func3 << 12 | offset.lower << 7 | opcode);
 }
 
 void lb(std::vector<uint32_t> &instructions, reg rd, reg rs1, uint32_t imm12) {
@@ -218,7 +219,7 @@ void addi(std::vector<uint32_t> &instructions, reg rd, reg rs1,
           uint32_t imm12) {
   uint32_t opcode = 0b0010011;
   uint32_t funct3 = 0b000;
-  instructions.push_back(imm12 << 20 | rs1 << 15 | funct3 << 12 | rd << 7 |
+  instructions.push_back(bits(imm12,0,12) << 20 | rs1 << 15 | funct3 << 12 | rd << 7 |
                          opcode);
 }
 
@@ -269,7 +270,6 @@ void srl(std::vector<uint32_t> &instructions, reg rd, reg rs2, reg rs1) {
   instructions.push_back(funct7 << 25 | rs2 << 20 | rs1 << 15 | funct3 << 12 |
                          rd << 7 | opcode);
 }
- 
 
 void land(std::vector<uint32_t> &instructions, reg rd, reg rs2, reg rs1) {
   uint32_t opcode = 0b0110011;
@@ -296,8 +296,7 @@ void lxor(std::vector<uint32_t> &instructions, reg rd, reg rs2, reg rs1) {
 }
 
 void li(std::vector<uint32_t> &instructions, reg rd, uint32_t imm) {
-   addi(instructions, rd, reg::x0, imm);
-   lui(instructions, rd, imm);
+  lui(instructions, rd, imm);
+  addi(instructions, rd, rd, imm);
 }
-
 }

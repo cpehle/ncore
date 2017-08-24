@@ -340,5 +340,32 @@ package Bundle;
       logic       response_ready;
    } ICacheOut;
 
+   // CSR File Registers
+   typedef struct packed {
+      logic 	  sd;
+      logic [7:0] zero1;
+      logic 	  tsr;
+      logic 	  tw;
+      logic 	  tvm;
+      logic 	  mxr;
+      logic 	  sum;
+      logic 	  mprv;
+      logic [1:0] xs;
+      logic [1:0] fs;
+      logic [1:0] mpp;
+      logic [1:0] hpp;
+      logic [1:0] spp;
+      logic 	  mpie;
+      logic 	  hpie;
+      logic 	  spie;
+      logic 	  upie;
+      logic 	  mie;
+      logic 	  hie;
+      logic 	  sie;
+      logic 	  uie;
+   } MStatus;
+
+   
+   
 endpackage // Bundle
 `endif

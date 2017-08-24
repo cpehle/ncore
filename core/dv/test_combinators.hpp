@@ -20,7 +20,8 @@ void insert_nops(std::vector<uint32_t>& ins, int n) {
 void test_result(std::vector<uint32_t> &i, riscv::reg test_reg,
                  uint64_t correct_value, uint32_t xlen) {
   riscv::li(i, riscv::reg::x29, mask_xlen(correct_value, xlen));
-  riscv::beq(i, test_reg, riscv::reg::x29, 5 * 4);
+  /// the magic constant 6 * 4 is the number of instructions
+  riscv::beq(i, test_reg, riscv::reg::x29, 6 * 4);
   /// code should be jumped over
   riscv::addi(i, riscv::reg::x5, riscv::reg::x0, 30);
   riscv::addi(i, riscv::reg::x6, riscv::reg::x0, 40);
@@ -118,10 +119,9 @@ void test_rr_dest_bypass(std::vector<uint32_t>& i, uint32_t nop_cycles,
 }
 
 void test_rr_src12_bypass(
-    std::vector<uint32_t> i, uint32_t src1_nops, uint32_t src2_nops,
-    void(inst)(std::vector<uint32_t>, riscv::reg, riscv::reg, riscv::reg),
-    uint64_t result, uint64_t val1, uint64_t val2, uint32_t xlen = 32) {
-
+    std::vector<uint32_t>& i, uint32_t src1_nops, uint32_t src2_nops,
+    void(inst)(std::vector<uint32_t>&, riscv::reg, riscv::reg, riscv::reg),
+    uint64_t result, uint64_t val1, uint64_t val2, uint32_t xlen = 32) {  
   riscv::li(i, riscv::reg::x4, 0);
   // Branch back here
   riscv::li(i, riscv::reg::x1, mask_xlen(val1, xlen));
@@ -130,8 +130,8 @@ void test_rr_src12_bypass(
   insert_nops(i, src2_nops);
   inst(i, riscv::reg::x30, riscv::reg::x1, riscv::reg::x2);
   riscv::addi(i, riscv::reg::x4, riscv::reg::x4, 1);
-  riscv::li(i, riscv::reg::x5, 2);
-  riscv::bne(i, riscv::x4, riscv::x5, -(6 + src1_nops + src2_nops) * 4);
+  riscv::addi(i, riscv::reg::x5, riscv::reg::x0, 2);
+  riscv::bne(i, riscv::x4, riscv::x5, -(2 + 2 + 1 + 1 + 1 + 1 + src1_nops + src2_nops) * 4);
   test_result(i, riscv::reg::x30, result, xlen);
 }
 

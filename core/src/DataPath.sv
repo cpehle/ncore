@@ -8,10 +8,10 @@ module DataPath(
 		input  reset,
 		input  Bundle::ControlToData ctl, ///< Control signals from control to data path
 		output Bundle::DataToControl dat, ///< Signals from data path to control
-		output Bundle::MemoryIn imem_in, ///< Signals from instruction memory
-		input  Bundle::MemoryOut imem_out, ///< Signals to instruction memory
-		output Bundle::MemoryIn dmem_in, ///< Signals from data memory
-		input  Bundle::MemoryOut dmem_out  ///< Signals to data memory
+		output Bundle::MemoryIn imem_in, ///< Signals to instruction memory
+		input  Bundle::MemoryOut imem_out, ///< Signals from instruction memory
+		output Bundle::MemoryIn dmem_in, ///< Signals to data memory
+		input  Bundle::MemoryOut dmem_out  ///< Signals from data memory
    );
 
    /// The following are type declarations of pipeline registers

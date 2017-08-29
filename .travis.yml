@@ -15,5 +15,5 @@ install:
   - pushd . && wget https://www.veripool.org/ftp/verilator-3.904.tgz && tar xf verilator-3.904.tgz && cd verilator* && ./configure && make && sudo make install && popd
 script:
   - echo /usr/bin/python | ./configure 
-  - pushd . && cd core/dv && make -f core.mk && bazel test ... && popd
+  - cd core/dv && make -f core.mk && bazel test ...
 

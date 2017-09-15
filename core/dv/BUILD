@@ -4,33 +4,43 @@ py_binary(
 	deps = [":libcore"],
 )
 
+test_suite(
+    name = "instruction_tests",
+    tags = ["instruction"],
+)
+
 cc_test(
 	name = "branch",	
 	srcs = ["test/add.cpp"],
+	tags = ["instruction"],
 	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
 )
 
 cc_test(
 	name = "land",	
 	srcs = ["test/add.cpp"],
+	tags = ["instruction"],
 	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
 )
 
 cc_test(
 	name = "arithmetic",	
 	srcs = ["test/add.cpp"],
+	tags = ["instruction"],
 	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
 )
 
 cc_test(
 	name = "add",	
 	srcs = ["test/add.cpp"],
+	tags = ["instruction"],
 	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
 )
 
 cc_test(
 	name = "basic",	
 	srcs = ["test/basic.cpp"],
+	tags = ["instruction"],	
 	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
 )
 

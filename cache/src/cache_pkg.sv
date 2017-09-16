@@ -1,4 +1,6 @@
 /* verilator lint_off DECLFILENAME */
+`ifndef _cache
+`define _cache
 package cache;
    parameter int tag_size = 18;
    
@@ -38,5 +40,6 @@ package cache;
       cache_data_t data;
       logic 	  ready;
    } mem_resp_t;
-endpackage
-
+endpackage // cache
+`endif
+/* verilator lint_on DECLFILENAME */

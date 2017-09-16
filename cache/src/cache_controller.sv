@@ -1,3 +1,4 @@
+`include "cache_pkg.sv"
 module cache_controller(
 			input logic clk,
 			input logic reset,
@@ -66,14 +67,18 @@ module cache_controller(
    endfunction // cache_index
    /* verilator lint_on UNUSED */
 
+   /* verilator lint_off UNUSED */
    function logic[17:0] cache_tag(cache::cpu_req_t req);      
       return req.addr[31:14];
    endfunction
+   /* verilator lint_on UNUSED */
 
+   /* verilator lint_off UNUSED */
    function logic[13:0] cache_entry(cache::cpu_req_t req);      
       // TODO(Christian): Slightly misleading
       return req.addr[13:0];
-   endfunction
+   endfunction // cache_entry
+   /* verilator lint_on UNUSED */
 
    typedef enum			    {idle, compare_tag, allocate, write_back} state_t;
 

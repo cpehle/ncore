@@ -363,9 +363,6 @@ package Bundle;
       logic 	  hie;
       logic 	  sie;
       logic 	  uie;
-   } MStatus;
-
-   
-   
+   } MStatus;   
 endpackage // Bundle
 `endif

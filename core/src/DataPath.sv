@@ -114,7 +114,6 @@ module DataPath(
    assign imem_in.req_valid = 1'b1;
    assign if_instruction = imem_out.res.data;
 
-
    /// Instruction Decode Stage
    always_comb begin
       idsn = ids;

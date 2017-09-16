@@ -31,6 +31,13 @@ cc_test(
 )
 
 cc_test(
+	name = "sub",	
+	srcs = ["test/sub.cpp"],
+	tags = ["instruction"],
+	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
+)
+
+cc_test(
 	name = "add",	
 	srcs = ["test/add.cpp"],
 	tags = ["instruction"],

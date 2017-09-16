@@ -2,7 +2,7 @@
 #include "core/dv/DutCore.hpp"
 #include "core/dv/riscv.h"
 
-namespace add {
+namespace sub {
 
 struct test_binop {
   uint64_t result;
@@ -32,49 +32,47 @@ struct test_nops_binop {
 };
 
 std::vector<test_unop> same_source_tests = {
-    {26, 13}, {24, 12}, {8, 4},
+    {0, 13}, {0, 12}, {0, 4},
 };
 
 std::vector<test_binop> arithmetic_tests = {
-    {0x00000000, 0x00000000, 0x00000000},
-    {0x00000000, 0x00000000, 0x00000000},
-    {0x00000002, 0x00000001, 0x00000001},
-    {0x0000000a, 0x00000003, 0x00000007},
-    // {0xffffffffffff8000, 0x0000000000000000, 0xffffffffffff8000},
-    // {0xffffffff80000000, 0xffffffff80000000, 0x00000000},
-    // {0xffffffff7fff8000, 0xffffffff80000000, 0xffffffffffff8000},
-    {0x0000000000007fff, 0x0000000000000000, 0x0000000000007fff},
-    {0x000000007fffffff, 0x000000007fffffff, 0x0000000000000000},
-    //{0x0000000080007ffe, 0x000000007fffffff, 0x0000000000007fff},
-    // {0xffffffff80007fff, 0xffffffff80000000, 0x0000000000007fff},
-    // {0x000000007fff7fff, 0x000000007fffffff, 0xffffffffffff8000},
-    // {0xffffffffffffffff, 0x0000000000000000, 0xffffffffffffffff},
-    // {0x0000000000000000, 0xffffffffffffffff, 0x0000000000000001},
-    // {0xfffffffffffffffe, 0xffffffffffffffff, 0xffffffffffffffff},
-    //{0x0000000080000000, 0x0000000000000001, 0x000000007fffffff},
+  {0x0000000000000000, 0x0000000000000000, 0x0000000000000000},
+  {0x0000000000000000, 0x0000000000000001, 0x0000000000000001},
+  //{0xfffffffffffffffc, 0x0000000000000003, 0x0000000000000007},
+  //{0x0000000000008000, 0x0000000000000000, 0xffffffffffff8000},
+  //{0xffffffff80000000, 0xffffffff80000000, 0x0000000000000000},
+  //{0xffffffff80008000, 0xffffffff80000000, 0xffffffffffff8000},
+  //{0xffffffffffff8001, 0x0000000000000000, 0x0000000000007fff},
+  //{0x000000007fffffff, 0x000000007fffffff, 0x0000000000000000},
+  //{0x000000007fff8000, 0x000000007fffffff, 0x0000000000007fff},
+  //{0xffffffff7fff8001, 0xffffffff80000000, 0x0000000000007fff},
+  //{0x0000000080007fff, 0x000000007fffffff, 0xffffffffffff8000},
+  //{0x0000000000000001, 0x0000000000000000, 0xffffffffffffffff},
+  //{0xfffffffffffffffe, 0xffffffffffffffff, 0x0000000000000001},
+  //{0x0000000000000000, 0xffffffffffffffff, 0xffffffffffffffff},
 };
 
 std::vector<test_nop_binop> dest_bypass_tests = {
-    {0, {24, 13, 11}}, {1, {25, 14, 11}}, {2, {26, 15, 11}},
+    {0, {2, 13, 11}}, {1, {3, 14, 11}}, {2, {4, 15, 11}},
 };
 
 std::vector<test_nops_binop> src12_bypass_tests = {
-    {0, 0, {24, 13, 11}}, {0, 1, {25, 14, 11}}, {0, 2, {26, 15, 11}},
-    {1, 0, {24, 13, 11}}, {1, 1, {25, 14, 11}}, {2, 0, {26, 15, 11}},
+    {0, 0, {2, 13, 11}}, {0, 1, {3, 14, 11}}, {0, 2, {4, 15, 11}},
+    {1, 0, {2, 13, 11}}, {1, 1, {3, 14, 11}}, {2, 0, {4, 15, 11}},
 };
 }
 
-TEST(Arithmetic, Add) {
-  for (auto t : add::arithmetic_tests) {
+TEST(Arithmetic, Sub) {
+  for (auto t : sub::arithmetic_tests) {
     VDutCore *core = new VDutCore("Core");
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticAdd.vcd");
+    tfp->open("ArithmeticSub.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
-    tc::test_rr_op(instruction_memory, &riscv::add, t.result, t.value1,
+    tc::test_rr_op(instruction_memory, &riscv::sub, t.result, t.value1,
                    t.value2, 32);
 
     const uint32_t nop = 0x13;
@@ -93,17 +91,17 @@ TEST(Arithmetic, Add) {
   }
 }
 
-TEST(Arithmetic, AddSrc1EqDest) {
-  for (auto t : add::arithmetic_tests) {
+TEST(Arithmetic, SubSrc1EqDest) {
+  for (auto t : sub::arithmetic_tests) {
     VDutCore *core = new VDutCore("Core");
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticAdd.vcd");
+    tfp->open("ArithmeticSub.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
-    tc::test_rr_src1_eq_dest(instruction_memory, &riscv::add, t.result,
+    tc::test_rr_src1_eq_dest(instruction_memory, &riscv::sub, t.result,
                              t.value1, t.value2, 32);
 
     const uint32_t nop = 0x13;
@@ -124,17 +122,17 @@ TEST(Arithmetic, AddSrc1EqDest) {
   }
 }
 
-TEST(Arithmetic, AddSrc2EqDest) {
-  for (auto t : add::arithmetic_tests) {
+TEST(Arithmetic, SubSrc2EqDest) {
+  for (auto t : sub::arithmetic_tests) {
     VDutCore *core = new VDutCore("Core");
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticAdd.vcd");
+    tfp->open("ArithmeticSub.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
-    tc::test_rr_src2_eq_dest(instruction_memory, &riscv::add, t.result,
+    tc::test_rr_src2_eq_dest(instruction_memory, &riscv::sub, t.result,
                              t.value1, t.value2, 32);
 
     const uint32_t nop = 0x13;
@@ -153,17 +151,17 @@ TEST(Arithmetic, AddSrc2EqDest) {
   }
 }
 
-TEST(Arithmetic, AddSrc12EqDest) {
-  for (auto t : add::same_source_tests) {
+TEST(Arithmetic, SubSrc12EqDest) {
+  for (auto t : sub::same_source_tests) {
     VDutCore *core = new VDutCore("Core");
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticAdd.vcd");
+    tfp->open("ArithmeticSub.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
-    tc::test_rr_src12_eq_dest(instruction_memory, &riscv::add, t.result,
+    tc::test_rr_src12_eq_dest(instruction_memory, &riscv::sub, t.result,
                               t.value, 32);
 
     const uint32_t nop = 0x13;
@@ -181,18 +179,18 @@ TEST(Arithmetic, AddSrc12EqDest) {
     tfp->close();
   }
 }
-
-TEST(Arithmetic, AddDestBypass) {
-  for (auto t : add::dest_bypass_tests) {
+/*
+TEST(Arithmetic, SubDestBypass) {
+  for (auto t : sub::dest_bypass_tests) {
     VDutCore *core = new VDutCore("Core");
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticAddDestBypass.vcd");
+    tfp->open("ArithmeticSubDestBypass.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
-    tc::test_rr_dest_bypass(instruction_memory, t.nop, &riscv::add,
+    tc::test_rr_dest_bypass(instruction_memory, t.nop, &riscv::sub,
                             t.binop.result, t.binop.value1, t.binop.value2, 32);
 
     const uint32_t nop = 0x13;
@@ -211,18 +209,19 @@ TEST(Arithmetic, AddDestBypass) {
     tfp->close();
   }
 }
-
-TEST(Arithmetic, AddSrc12BypassTest) {
-  for (auto t : add::src12_bypass_tests) {
+*/
+/*
+TEST(Arithmetic, SubSrc12BypassTest) {
+  for (auto t : sub::src12_bypass_tests) {
     VDutCore *core = new VDutCore("Core");
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticAddSrc12Bypass.vcd");
+    tfp->open("ArithmeticSubSrc12Bypass.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
-    tc::test_rr_src12_bypass(instruction_memory, t.nop1, t.nop2, &riscv::add,
+    tc::test_rr_src12_bypass(instruction_memory, t.nop1, t.nop2, &riscv::sub,
                              t.binop.result, t.binop.value1, t.binop.value2,
                              32);
 
@@ -241,3 +240,4 @@ TEST(Arithmetic, AddSrc12BypassTest) {
     tfp->close();
   }
 }
+*/

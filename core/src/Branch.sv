@@ -14,8 +14,7 @@ module Branch(
 				   /*AUTOINST*/
 				   // Inputs
 				   .clk			(clk));
-   
-   
+      
    PcSel pc_sel_reg;
    always_ff @(posedge clk) begin
       pc_sel_reg <= branch_in.pipeline_kill ? PC_EXC :

@@ -3,10 +3,10 @@
 `define _Bundle
 package Bundle;
 
-   parameter logic [31:0] Bubble = 0'h4033;
+   localparam logic [31:0] Bubble = 32'h4033;
 
-   parameter int 	  fetchWidth = 4;
-   parameter int 	  opaqueBits = 10;
+   localparam int 	  fetchWidth = 4;
+   localparam int 	  opaqueBits = 10;
    
    
    typedef enum [3:0] {

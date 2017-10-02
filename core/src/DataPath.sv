@@ -156,18 +156,6 @@ module DataPath(
 			      // Inputs
 			      .clk              (clk));
 
-   /// Breakpoint Unit
-   /// not implemented yet
-   BreakpointUnit breakpoint_unit(/*AUTOINST*/
-				  // Inputs
-				  .clk                  (clk));
-
-   /// Control Status Register File
-   /// not implemented yet
-   CSRFile csr_file(/*AUTOINST*/
-		    // Inputs
-		    .clk                (clk));
-
    /// Immediate Variables
    /// See section 2.2 of the riscv instruction manual
    logic [11:0] imm_itype;

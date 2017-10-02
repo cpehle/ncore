@@ -31,21 +31,23 @@ module ControlPath (
       logic fence_i;                          ///< thread fence
    } ControlSignals;
 
-   ControlSignals cs_default = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
-   ControlSignals cs;
 
-   import Bundle::*;   
+   import Bundle::*;
+
+   ControlSignals cs;
+   ControlSignals cs_default;
+   assign cs_default =  '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
+
+
    BranchIn branch_in;
    BranchOut branch_out;
-
-   logic pipeline_kill = 1'b0;
 
    logic [4:0] dec_rs1_addr;
    logic [4:0] dec_rs2_addr;
    logic [4:0] dec_wb_addr;
  
    always_comb begin
-      cs = cs_default;
+      cs = '{1'b0,BR_N,OP1_RS1,OP2_ITYPE,OEN_1,OEN_0,ALU_ADD,WB_MEM,REN_1,MEN_1,M_XRD,MT_B,CSR_N,1'b0};
       case (dat.dec_inst) inside
         ///< load upper immediate / add unsigned immediate program counter (section X.X)
         `AUIPC: cs = '{1'b1,BR_N,OP1_PC,OP2_UTYPE,OEN_0,OEN_0,ALU_ADD,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
@@ -116,7 +118,7 @@ module ControlPath (
       endcase // case (dat.dec_inst)
       
 
-      branch_in.pipeline_kill = pipeline_kill;
+      branch_in.pipeline_kill = 1'b0;
       branch_in.br_type = dat.exe_br_type;
       branch_in.br_eq = dat.exe_br_eq;
       branch_in.br_lt = dat.exe_br_lt;
@@ -139,8 +141,10 @@ module ControlPath (
 
    /// Decode Control logic
 
-   RegisterOpEn dec_rs1_oen = branch_out.dec_kill ? OEN_0 : cs.rs1_oen;
-   RegisterOpEn dec_rs2_oen = branch_out.dec_kill ? OEN_0 : cs.rs2_oen;
+   RegisterOpEn dec_rs1_oen;
+   assign dec_rs1_oen = branch_out.dec_kill ? OEN_0 : cs.rs1_oen;
+   RegisterOpEn dec_rs2_oen;
+   assign dec_rs2_oen = branch_out.dec_kill ? OEN_0 : cs.rs2_oen;
 
    /// Stall Control Logic
    logic       hazard_stall; // stall because of hazard
@@ -196,8 +200,10 @@ module ControlPath (
    end
 
    /// Bypassing Control Logic   
-   logic mem_fcn_is_read = (cs.mem_fcn == M_XRD);
-   logic exe_inst_is_load = cs.mem_en && mem_fcn_is_read;
+   logic mem_fcn_is_read;
+   assign mem_fcn_is_read = (cs.mem_fcn == M_XRD);
+   logic exe_inst_is_load;
+   assign exe_inst_is_load = cs.mem_en && mem_fcn_is_read;
    // we want to stall execution if the previous instruction was a load
    logic exe_inst_is_load_reg;
    always_ff @(posedge clk) begin

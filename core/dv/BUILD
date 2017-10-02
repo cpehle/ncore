@@ -16,6 +16,15 @@ cc_test(
 	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
 )
 
+
+cc_test(
+	name = "load_immediate",	
+	srcs = ["test/load_immediate_test.cpp"],
+	tags = ["instruction"],
+	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
+)
+
+
 cc_test(
 	name = "land",	
 	srcs = ["test/add.cpp"],

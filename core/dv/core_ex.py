@@ -3,7 +3,7 @@ import numpy as np
 
 def step(dut, memory):
     for i in range(2):
-        dut.clk == ~dut.clk
+        dut.clk = ~dut.clk
     
         # service instruction memory requests       
         iaddr = int(dut.imem_in_req_addr/4)

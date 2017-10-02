@@ -38,6 +38,7 @@ std::vector<test_unop> same_source_tests = {
 std::vector<test_binop> arithmetic_tests = {
   {0x0000000000000000, 0x0000000000000000, 0x0000000000000000},
   {0x0000000000000000, 0x0000000000000001, 0x0000000000000001},
+  {0x0000000000000001, 0x0000000000000002, 0x0000000000000001},
   //{0xfffffffffffffffc, 0x0000000000000003, 0x0000000000000007},
   //{0x0000000000008000, 0x0000000000000000, 0xffffffffffff8000},
   //{0xffffffff80000000, 0xffffffff80000000, 0x0000000000000000},
@@ -47,9 +48,9 @@ std::vector<test_binop> arithmetic_tests = {
   //{0x000000007fff8000, 0x000000007fffffff, 0x0000000000007fff},
   //{0xffffffff7fff8001, 0xffffffff80000000, 0x0000000000007fff},
   //{0x0000000080007fff, 0x000000007fffffff, 0xffffffffffff8000},
-  //{0x0000000000000001, 0x0000000000000000, 0xffffffffffffffff},
-  //{0xfffffffffffffffe, 0xffffffffffffffff, 0x0000000000000001},
-  //{0x0000000000000000, 0xffffffffffffffff, 0xffffffffffffffff},
+  //0x0000000000000001, 0x0000000000000000, 0xffffffffffffffff},
+  // {0xfffffffffffffffe, 0xffffffffffffffff, 0x0000000000000001},
+  {0x0000000000000000, 0xffffffffffffffff, 0xffffffffffffffff},
 };
 
 std::vector<test_nop_binop> dest_bypass_tests = {
@@ -97,7 +98,7 @@ TEST(Arithmetic, SubSrc1EqDest) {
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticSub.vcd");
+    tfp->open("ArithmeticSubSrc1EqDest.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
@@ -128,7 +129,7 @@ TEST(Arithmetic, SubSrc2EqDest) {
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticSub.vcd");
+    tfp->open("ArithmeticSubSrc2EqDest.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;
@@ -157,7 +158,7 @@ TEST(Arithmetic, SubSrc12EqDest) {
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
     core->trace(tfp, 99);
-    tfp->open("ArithmeticSub.vcd");
+    tfp->open("ArithmeticSubSrc12EqDest.vcd");
 
     std::vector<uint32_t> instruction_memory;
     std::vector<uint32_t> data_memory;

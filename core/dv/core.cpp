@@ -4,6 +4,7 @@
 
 namespace py = pybind11;
 
+
 PYBIND11_MODULE(libcore, m) {  
   py::class_<::VerilatedModule>(m, "VerilatedModule",
                                 "Base class for all Verilated module classes")

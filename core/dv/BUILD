@@ -63,6 +63,13 @@ cc_library(
 )    
 
 py_library(
+    name = "libriscv",
+    data = [":libriscv.so"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "libcore",
     data = [":libcore.so"],
     imports = ["."],
@@ -70,10 +77,26 @@ py_library(
 )
 
 cc_binary(
+    name = "libriscv.so",
+    srcs = [
+    	"riscv.h",
+        "py_riscv.cpp",
+    ],
+    linkshared = 1,
+    linkstatic = 1,
+    copts = ["-std=c++14", "-fvisibility=hidden"],
+    deps = [
+        "//util/python:python_headers",
+        "@pybind11//:pybind11_cxx",
+    ],
+)
+
+
+cc_binary(
     name = "libcore.so",
     srcs = [
         "core.cpp",
-    ],
+    ],   
     linkshared = 1,
     linkstatic = 1,
     copts = ["-std=c++14", "-fvisibility=hidden"],

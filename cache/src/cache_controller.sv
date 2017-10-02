@@ -55,6 +55,7 @@ module cache_controller(
    // - Maybe investigate a quad port cache memory
    //
 
+
    /* verilator lint_off UNUSED */
    function logic[1:0] cache_block(cache::cpu_req_t req);      
       return req.addr[3:2];
@@ -89,18 +90,23 @@ module cache_controller(
    cache::cache_tag_t tag_read;
    cache::cache_tag_t tag_write;
    cache::cache_req_t tag_req;
-   cache::cache_data_t data_read, data_write;
+   cache::cache_data_t data_read;   
+   cache::cache_data_t data_write;
    cache::cache_req_t data_req;
+   
+   cache::cpu_resp_t cpu_resp_reg;
+   cache::cpu_resp_t cpu_resp_next;
+   
+   cache::mem_req_t mem_req_reg;
+   cache::mem_req_t mem_req_next;
 
-   // outputs
-   cache::cpu_resp_t cpu_resp_v;
-   cache::mem_req_t mem_req_v;
-
+   
+   
    // cache controller finite state machine
    always_comb begin
       // default assignments
       next_state = state;
-      cpu_resp_v = '{0,0};
+      cpu_resp_next = '{0,0};
       tag_req.we = '0;
       tag_req.index = cache_index(cpu_req);
       data_req.we = '0;
@@ -114,16 +120,18 @@ module cache_controller(
 	2'b11:data_write[127:96] = cpu_req.data;
       endcase
       case(cache_block(cpu_req))
-	2'b00: cpu_resp_v.data = data_read[31:0];
-	2'b01: cpu_resp_v.data = data_read[63:32];
-	2'b10: cpu_resp_v.data = data_read[95:64];
-	2'b11: cpu_resp_v.data = data_read[127:96];
+	2'b00: cpu_resp_next.data = data_read[31:0];
+	2'b01: cpu_resp_next.data = data_read[63:32];
+	2'b10: cpu_resp_next.data = data_read[95:64];
+	2'b11: cpu_resp_next.data = data_read[127:96];
       endcase
 
-      mem_req.addr = cpu_req.addr;
-      mem_req.data = data_read;
-      mem_req.rw = '0;
-
+      mem_req_next.addr = cpu_req.addr;
+      mem_req_next.data = data_read;
+      mem_req_next.rw = 1'b0;
+      mem_req_next.valid = 1'b0;
+   
+      // state machine        
       case (state)
 	idle: begin
 	   if (cpu_req.valid) begin
@@ -133,7 +141,7 @@ module cache_controller(
 	compare_tag: begin
 	   if (cache_tag(cpu_req) == tag_read.tag && tag_read.valid) begin
 	      // cache hit
-	      cpu_resp_v.ready = '1;
+	      cpu_resp_next.ready = '1;
 	      if (cpu_req.rw) begin
 		 tag_req.we = '1;
 		 data_req.we = '1;
@@ -148,12 +156,12 @@ module cache_controller(
 	      tag_write.valid = '1;
 	      tag_write.tag = cache_tag(cpu_req);
 	      tag_write.dirty = cpu_req.rw;
-	      mem_req_v.valid = '1;
+	      mem_req_next.valid = '1;
 	      if (tag_read.valid == 1'b0 || tag_read.dirty == 1'b0) begin
 		 next_state = allocate;
 	      end else begin
-		 mem_req_v.addr = {tag_read.tag, cache_entry(cpu_req)};
-		 mem_req_v.rw = '1;
+		 mem_req_next.addr = {tag_read.tag, cache_entry(cpu_req)};
+		 mem_req_next.rw = '1;
 		 next_state = write_back;
 	      end
 	   end // else: !if(cache_tag(cpu_req) == tag_read.tag && tag_read.valid)
@@ -168,9 +176,9 @@ module cache_controller(
 	end
 	write_back: begin
 	   // wait until dirty cache line is written back
+	   mem_req_next.valid = '1;
+	   mem_req_next.rw = '0;	   
 	   if (mem_data.ready) begin
-	      mem_req_v.valid = '1;
-	      mem_req_v.rw = '0;
 	      next_state = allocate;
 	   end
 	end
@@ -180,14 +188,18 @@ module cache_controller(
    always_ff @(posedge clk) begin
       if (reset) begin
 	 state <= idle;
+	 cpu_resp_reg <= '{0,0};
+	 mem_req_reg <= '{0,0,0,0};	 
       end else begin
 	 state <= next_state;
+	 cpu_resp_reg <= cpu_resp_next;
+	 mem_req_reg <= mem_req_next;	 
       end
    end
 
+   assign cpu_resp = cpu_resp_reg;
+   assign mem_req = mem_req_reg;
+      
    data_memory_cache_sim dm(.clk, .data_req, .data_write, .data_read);
    tag_memory_cache_sim tm(.clk, .tag_req, .tag_write, .tag_read);
-
-   assign cpu_resp = cpu_resp_v;
-   assign mem_req = mem_req_v;
 endmodule

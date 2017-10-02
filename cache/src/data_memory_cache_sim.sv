@@ -1,3 +1,4 @@
+`include "cache_pkg.sv"
 module data_memory_cache_sim(
 			 input logic clk,
 			 input 	     cache::cache_req_t data_req,
@@ -6,16 +7,19 @@ module data_memory_cache_sim(
 );   
    parameter size = 1024;   
    cache::cache_data_t data_mem[0:size-1];
-   
+   cache::cache_data_t result;
+      
    initial begin
       for (int i=0; i < size; i++) begin
 	 data_mem[i] = '0;
       end
    end
 
-   assign data_read = data_mem[data_req.index];
    
-   always_ff @(posedge(clk)) begin 
+   assign data_read = result;
+      
+   always_ff @(posedge(clk)) begin
+      result <= data_mem[data_req.index];
       if (data_req.we) begin
 	 data_mem[data_req.index] <= data_write;	 
       end

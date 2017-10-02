@@ -10,7 +10,7 @@ microarchitecture. The main motivation for doing
 this port was to compare the expressiveness of Chisel to System
 Verilog. 
 
-## Building
+## Testing
 
 A work in progress testbench can be found in sc/dv/ it uses
 [verilator](http://www.veripool.org/wiki/verilator), once I've figured
@@ -24,10 +24,16 @@ google test + bazel
 ```
 cd core/dv
 make -f core.mk
-bazel run :dut_core_test
+bazel test //core/dv:instruction_tests
 ```
+
+## FPGA Synthesis
 
 In xilinx/ there is an incomplete synthesis flow to a xilinx
 bitfile. For this to actually work one would need some more work on
 peripheral components.
 
+## ASIC Synthesis
+
+There is an incomplete synthesis flow using synopsis design compiler
+available in syn/dc_shell.

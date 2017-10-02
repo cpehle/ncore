@@ -10,6 +10,7 @@ MODULE_SRCS := \
 	../core/src/Alu.sv\
 	../core/src/Branch.sv\
 	../core/src/ControlPath.sv\
+	../core/src/Register.sv\
 	../core/src/Core.sv\
 	../core/src/DataPath.sv\
 	../core/src/RegisterFile.sv\

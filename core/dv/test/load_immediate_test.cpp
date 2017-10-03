@@ -5,10 +5,9 @@
 namespace li {
 
 std::vector<uint64_t> tests = {
-  //  0xffffffffffffffff,
-  //0x00000000000fffff,
-  //0x0,
-  //0x000000000000ffff,
+  0xffffffffffffffff,
+  0x00000000000fffff,
+  0x000000000000ffff,
   0x0000000000000fff,  
 };
 

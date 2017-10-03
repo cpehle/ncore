@@ -223,6 +223,15 @@ void addi(std::vector<uint32_t> &instructions, reg rd, reg rs1,
                          opcode);
 }
 
+void ori(std::vector<uint32_t> &instructions, reg rd, reg rs1,
+          uint32_t imm12) {
+  uint32_t opcode = 0b0010011;
+  uint32_t funct3 = 0b110;
+  instructions.push_back(bits(imm12,0,12) << 20 | rs1 << 15 | funct3 << 12 | rd << 7 |
+                         opcode);
+}
+ 
+
 void add(std::vector<uint32_t> &instructions, reg rd, reg rs2, reg rs1) {
   uint32_t opcode = 0b0110011;
   uint32_t funct7 = 0b0000000;
@@ -297,6 +306,6 @@ void lxor(std::vector<uint32_t> &instructions, reg rd, reg rs2, reg rs1) {
 
 void li(std::vector<uint32_t> &instructions, reg rd, uint32_t imm) {
   lui(instructions, rd, imm);
-  addi(instructions, rd, rd, imm);
+  ori(instructions, rd, rd, bits(imm,0,12));
 }
 }

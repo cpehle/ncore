@@ -363,6 +363,25 @@ package Bundle;
       logic 	  hie;
       logic 	  sie;
       logic 	  uie;
-   } MStatus;   
+   } MStatus;
+
+   typedef struct packed {
+      logic zero2;
+      logic debug;
+      logic zero1;
+      logic rocc;
+      logic meip;
+      logic heip;
+      logic seip;
+      logic ueip;
+      logic mtip;
+      logic htip;
+      logic stip;
+      logic utip;
+      logic msip;
+      logic hsip;
+      logic ssip;
+      logic usip;
+   } MIP;   
 endpackage // Bundle
 `endif

@@ -114,6 +114,14 @@ module ControlPath (
         // TODO
         `FENCE_I: cs = cs_default;
         `FENCE:   cs = cs_default;
+
+	// Single Precision Floating Point
+	`FADD: cs = cs_default;	
+	`FMUL: cs = cs_default;	
+	`FSUB: cs = cs_default;	
+	`FSW: cs = cs_default;	
+	`FLW: cs = cs_default;
+        // TODO: Investigate generated code, probably should put an invalid here
         default: cs = cs_default;
       endcase // case (dat.dec_inst)
       

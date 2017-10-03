@@ -11,5 +11,19 @@ module top(
 	  .dmem_in			(dmem_in),
 	  // Inputs
 	  .clk				(clk),
-	  .reset			(reset));   
+	  .reset			(reset));
+
+   cache_controller dcache(/*AUTOINST*/
+			   // Interfaces
+			   .cpu_req		(cpu_req),
+			   .mem_data		(mem_data),
+			   .mem_req		(mem_req),
+			   .cpu_resp		(cpu_resp),
+			   // Inputs
+			   .clk			(clk),
+			   .reset		(reset));
+   cache_controller icache(/*AUTOINST*/);   
 endmodule
+// Local Variables:
+// verilog-library-directories:("." "../../cache/src")
+// End:

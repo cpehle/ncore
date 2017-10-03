@@ -32,8 +32,8 @@ module DataPath(
       logic [4:0]               wb_addr;      // write back address
       logic [4:0]               rs1_addr;     // address of source register 1
       logic [4:0]               rs2_addr;     // address of source register 2
-      logic [31:0]              op1_data;     // operand 1 address
-      logic [31:0]              op2_data;     // operand 2 address
+      logic [31:0]              op1_data;     // operand 1 data
+      logic [31:0]              op2_data;     // operand 2 data
       logic [31:0]              rs2_data;     // source register 2 data
       Bundle::BranchType        ctrl_br_type; // control branch type
       Bundle::Op2Sel            ctrl_op2_sel; // control operand 2 select
@@ -294,6 +294,8 @@ module DataPath(
 	   .alu_in                      (alu_in),
 	   .alu_out                     (alu_out));
 
+   
+   
    /// Memory Stage
    always_comb begin
       // default assignment

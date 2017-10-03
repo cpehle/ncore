@@ -42,15 +42,15 @@ std::vector<test_binop> arithmetic_tests = {
   {0xfffffffffffffffc, 0x0000000000000003, 0x0000000000000007},
   {0x0000000000008000, 0x0000000000000000, 0xffffffffffff8000},
   {0xffffffff80000000, 0x0000000000000000, 0xffffffff80000000},
-  //{0xffffffff80008000, 0xffffffff80000000, 0xffffffffffff8000},
-  //{0xffffffffffff8001, 0x0000000000000000, 0x0000000000007fff},
-  //{0x000000007fffffff, 0x000000007fffffff, 0x0000000000000000},
-  //{0x000000007fff8000, 0x000000007fffffff, 0x0000000000007fff},
-  //{0xffffffff7fff8001, 0xffffffff80000000, 0x0000000000007fff},
-  //{0x0000000080007fff, 0x000000007fffffff, 0xffffffffffff8000},
-  //{0x0000000000000001, 0x0000000000000000, 0xffffffffffffffff},
-  //{0xfffffffffffffffe, 0xffffffffffffffff, 0x0000000000000001},
-  //{0x0000000000000000, 0xffffffffffffffff, 0xffffffffffffffff},
+  //{0xffffffff80008000, 0xffffffffffff8000,  0xffffffff80000000},
+  //{0xffffffffffff8001, 0x0000000000007fff,  0x0000000000000000},
+  //{0x000000007fffffff, 0x0000000000000000,  0x000000007fffffff},
+  //{0x000000007fff8000, 0x0000000000007fff,  0x000000007fffffff},
+  //{0xffffffff7fff8001, 0x0000000000007fff,  0xffffffff80000000},
+  //{0x0000000080007fff, 0xffffffffffff8000,  0x000000007fffffff},
+  //{0x0000000000000001, 0xffffffffffffffff,  0x0000000000000000},
+  //{0xfffffffffffffffe, 0x0000000000000001,  0xffffffffffffffff},
+  {0x0000000000000000, 0xffffffffffffffff,  0xffffffffffffffff},
 };
 
 std::vector<test_nop_binop> dest_bypass_tests = {
@@ -180,7 +180,7 @@ TEST(Arithmetic, SubSrc12EqDest) {
     tfp->close();
   }
 }
-/*
+
 TEST(Arithmetic, SubDestBypass) {
   for (auto t : sub::dest_bypass_tests) {
     VDutCore *core = new VDutCore("Core");
@@ -210,8 +210,8 @@ TEST(Arithmetic, SubDestBypass) {
     tfp->close();
   }
 }
-*/
-/*
+
+
 TEST(Arithmetic, SubSrc12BypassTest) {
   for (auto t : sub::src12_bypass_tests) {
     VDutCore *core = new VDutCore("Core");
@@ -241,4 +241,3 @@ TEST(Arithmetic, SubSrc12BypassTest) {
     tfp->close();
   }
 }
-*/

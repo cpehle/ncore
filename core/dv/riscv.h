@@ -256,6 +256,12 @@ void xor_op(std::vector<uint32_t> &instructions, reg rd, reg rs2, reg rs1) {
                          rd << 7 | opcode);
 }
 
+void csrrw(std::vector<uint32_t>& instructions, reg rd, uint32_t csr, reg rs1) {
+  uint32_t opcode = 0b1110011;
+  uint32_t funct3 = 0b001;
+  instructions.push_back(csr << 20 | rs1 << 15 | funct3 << 12 | rd << 7 | opcode);
+}
+
 void sll(std::vector<uint32_t> &instructions, reg rd, reg rs2, reg rs1) {
   uint32_t opcode = 0b0110011;
   uint32_t funct7 = 0b0000000;

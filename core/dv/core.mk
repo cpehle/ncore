@@ -1,6 +1,6 @@
 packages = Bundle.sv
 interfaces =
-modules = Alu.sv ControlPath.sv DataPath.sv RegisterFile.sv Core.sv
+modules = Alu.sv ControlPath.sv DataPath.sv RegisterFile.sv Register.sv RegisterWE.sv Core.sv CSRFile.sv
 top_module = DutCore
 CXXFLAGS = -fPIC
 

@@ -90,7 +90,20 @@ module DataPath(
    logic [31:0]   dec_op2_data;
    logic [31:0]   dec_rs2_data;
    logic [31:0]   mem_wb_data;
+
+   // CSR wires
+   logic 	  csr_write_illegal;
+   logic 	  csr_system_illegal;
+   logic 	  csr_read_illegal;
+   logic 	  csr_stall;
+   logic [31:0]   csr_wdata;
+   logic [31:0]   csr_rdata;
+   logic [11:0]   csr;
    
+   
+   // TODO
+   assign exception_target = 32'h0;
+     
    /// Instruction Fetch stage
    always_comb begin
       // default assignment
@@ -151,14 +164,14 @@ module DataPath(
 
    RegisterFile register_file(/*AUTOINST*/
 			      // Interfaces
-			      .rf_in            (rf_in),
-			      .rf_out           (rf_out),
+			      .rf_in		(rf_in),
+			      .rf_out		(rf_out),
 			      // Inputs
-			      .clk              (clk));
-
+			      .clk		(clk));
+   
    /// Immediate Variables
    /// See section 2.2 of the riscv instruction manual
-   logic [11:0] imm_itype;
+   logic [11:0] imm_itype;   
    logic [11:0] imm_stype;
    logic [11:0] imm_sbtype;
    logic [19:0] imm_utype;
@@ -291,8 +304,8 @@ module DataPath(
       
    Alu alu(/*AUTOINST*/
 	   // Interfaces
-	   .alu_in                      (alu_in),
-	   .alu_out                     (alu_out));
+	   .alu_in			(alu_in),
+	   .alu_out			(alu_out));
 
    
    
@@ -327,13 +340,25 @@ module DataPath(
       ms <= msn;
    end
 
+   CSRFile csr_file(.csr_cmd(ms.ctrl_csr_cmd),
+		    .csr(ms.inst[31:20]),
+		    .csr_wdata(ms.alu_out),
+		    /*AUTOINST*/
+		    // Outputs
+		    .csr_rdata		(csr_rdata[31:0]),
+		    .csr_stall		(csr_stall),
+		    .csr_read_illegal	(csr_read_illegal),
+		    .csr_write_illegal	(csr_write_illegal),
+		    .csr_system_illegal	(csr_system_illegal),
+		    // Inputs
+		    .clk		(clk));
+   
    /// Write Back Stage
    /// Writeback data mux
    assign mem_wb_data = (ms.ctrl_wb_sel == Bundle::WB_ALU) ? ms.alu_out :
 			(ms.ctrl_wb_sel == Bundle::WB_PC4) ? ms.alu_out :
 			(ms.ctrl_wb_sel == Bundle::WB_MEM) ? dmem_out.res.data :
-			// (ms.ctrl_wb_sel == Bundle::WB_CSR) ? csr_in.rdata;
-			// TODO(Christian) CSR
+			(ms.ctrl_wb_sel == Bundle::WB_CSR) ? csr_rdata :
 			ms.alu_out;
 
    always_comb begin

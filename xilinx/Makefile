@@ -12,6 +12,7 @@ MODULE_SRCS := \
 	../core/src/ControlPath.sv\
 	../core/src/Core.sv\
 	../core/src/DataPath.sv\
+	../core/src/Register.sv\
 	../core/src/RegisterFile.sv\
 	../core/src/Top.sv
 

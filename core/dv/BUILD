@@ -16,6 +16,12 @@ cc_test(
 	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
 )
 
+cc_test(
+	name = "csrrw",	
+	srcs = ["test/csrrw_test.cpp"],
+	tags = ["instruction"],
+	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
+)
 
 cc_test(
 	name = "load_immediate",	
@@ -35,6 +41,13 @@ cc_test(
 cc_test(
 	name = "arithmetic",	
 	srcs = ["test/add.cpp"],
+	tags = ["instruction"],
+	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
+)
+
+cc_test(
+	name = "xor",	
+	srcs = ["test/xor.cpp"],
 	tags = ["instruction"],
 	deps = [":dut_core", ":riscv", ":test_combinators", "@gtest//:main"],
 )

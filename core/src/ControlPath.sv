@@ -96,13 +96,13 @@ module ControlPath (
         `SRL:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SRL ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
         `SRA:  cs = '{1'b1,BR_N,OP1_RS1,OP2_RS2,OEN_1,OEN_1,ALU_SRA ,WB_ALU,REN_1,MEN_0,M_X,MT_X,CSR_N,1'b0};
 
-        // TODO
-        `CSRRWI: cs = cs_default;
-        `CSRRSI: cs = cs_default;
-        `CSRRW:  cs = cs_default;
-        `CSRRS:  cs = cs_default;
-        `CSRRC:  cs = cs_default;
-        `CSRRCI: cs = cs_default;
+        // See Section (X.X)
+        `CSRRWI: cs = '{1'b1,BR_N,OP1_IMZ,OP2_X,OEN_1,OEN_1,ALU_COPY_1,WB_CSR,REN_1,MEN_0,M_X,MT_X,CSR_W,1'b0};
+        `CSRRSI: cs = '{1'b1,BR_N,OP1_IMZ,OP2_X,OEN_1,OEN_1,ALU_COPY_1,WB_CSR,REN_1,MEN_0,M_X,MT_X,CSR_S,1'b0};
+        `CSRRW:  cs = '{1'b1,BR_N,OP1_RS1,OP2_X,OEN_1,OEN_1,ALU_COPY_1,WB_CSR,REN_1,MEN_0,M_X,MT_X,CSR_W,1'b0};	
+        `CSRRS:  cs = '{1'b1,BR_N,OP1_RS1,OP2_X,OEN_1,OEN_1,ALU_COPY_1,WB_CSR,REN_1,MEN_0,M_X,MT_X,CSR_S,1'b0};
+        `CSRRC:  cs = '{1'b1,BR_N,OP1_RS1,OP2_X,OEN_1,OEN_1,ALU_COPY_1,WB_CSR,REN_1,MEN_0,M_X,MT_X,CSR_C,1'b0};
+        `CSRRCI: cs = '{1'b1,BR_N,OP1_IMZ,OP2_X,OEN_1,OEN_1,ALU_COPY_1,WB_CSR,REN_1,MEN_0,M_X,MT_X,CSR_C,1'b0};
 
         // TODO
         `SCALL:  cs = cs_default;
@@ -114,6 +114,14 @@ module ControlPath (
         // TODO
         `FENCE_I: cs = cs_default;
         `FENCE:   cs = cs_default;
+
+	// Single Precision Floating Point
+	`FADD: cs = cs_default;	
+	`FMUL: cs = cs_default;	
+	`FSUB: cs = cs_default;	
+	`FSW: cs = cs_default;	
+	`FLW: cs = cs_default;
+        // TODO: Investigate generated code, probably should put an invalid here
         default: cs = cs_default;
       endcase // case (dat.dec_inst)
       
@@ -247,6 +255,7 @@ module ControlPath (
       ctl.wb_sel = cs.wb_sel;
       ctl.rf_wen = cs.rf_wen;
       // TODO(Christian): Fence, Exceptions, CSR
+      ctl.csr_cmd = cs.csr_cmd;      
       imem_in.req_valid = 1'b1;
       imem_in.req.fcn = M_XRD;
       imem_in.req.typ = MT_WU;

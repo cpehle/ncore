@@ -36,10 +36,10 @@ package Bundle;
 
    typedef enum [2:0] {
                  CSR_N,
-                 CSR_W,
-                 CSR_S,
-                 CSR_I,
-                 CSR_C
+                 CSR_W, // Atomic Read/Write CSR
+                 CSR_S, // Atomic Read and Set Bit in CSR
+                 CSR_I, 
+                 CSR_C  // Atomic Read and Clear Bit in CSR
                  } ControlRegisterCommand;
 
    typedef enum [2:0] {
@@ -363,6 +363,25 @@ package Bundle;
       logic 	  hie;
       logic 	  sie;
       logic 	  uie;
-   } MStatus;   
+   } MStatus;
+
+   typedef struct packed {
+      logic zero2;
+      logic debug;
+      logic zero1;
+      logic rocc;
+      logic meip;
+      logic heip;
+      logic seip;
+      logic ueip;
+      logic mtip;
+      logic htip;
+      logic stip;
+      logic utip;
+      logic msip;
+      logic hsip;
+      logic ssip;
+      logic usip;
+   } MIP;   
 endpackage // Bundle
 `endif

@@ -23,9 +23,6 @@ module CSRFile(input clk,
    //
    // For now we only implement one dummy register unrelated to the RISCV
    // specification
-
-   logic [31:0] 		   in;
-   logic [31:0] 		   out;
    logic 			   csr_write;
         
    always_comb begin

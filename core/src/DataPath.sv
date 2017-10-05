@@ -96,11 +96,8 @@ module DataPath(
    logic 	  csr_system_illegal;
    logic 	  csr_read_illegal;
    logic 	  csr_stall;
-   logic [31:0]   csr_wdata;
    logic [31:0]   csr_rdata;
-   logic [11:0]   csr;
-   
-   
+     
    // TODO
    assign exception_target = 32'h0;
      

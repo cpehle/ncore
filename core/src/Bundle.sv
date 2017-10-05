@@ -232,13 +232,27 @@ package Bundle;
    } MemoryIn;
 
    typedef struct  packed {
+      MemoryRequest req;
+      logic         req_valid;
+      logic [4:0]   grant;
+   } MemoryBankIn;
+
+   
+   typedef struct  packed {
       MemoryResponse res;
       logic        req_ready;
       logic        res_valid;
    } MemoryOut;
 
+   typedef struct  packed {
+      MemoryResponse res;
+      logic       req_ready;
+      logic       res_valid;
+      logic [4:0] grant;
+   } MemoryBankOut;
+
    typedef struct packed {
-      logic [4:0] rs1_addr;
+      logic [4:0]  rs1_addr;
       logic [4:0] rs2_addr;
       logic [4:0] waddr;
       logic [31:0] wdata;

@@ -14,7 +14,17 @@ set_app_var link_library "
 	   /cad/libs/tsmc/sram/tsdn65lpa1024x32m4s_200b/SYNOPSYS/tsdn65lpa1024x32m4s_200b_ss1p08v125c.db
 	   /cad/libs/tsmc/sram/ts5n65lpa32x128m2_140b/SYNOPSYS/ts5n65lpa32x128m2_140b_ss1p08v125c.db"
 
+set_app_var mw_logic1_net "VDD"
+set_app_var mw_logic0_net "VSS"
 
+create_mw_lib -open -tech "/cad/libs/tsmc65/digital/Back_End/milkyway/tcbn65lp_200a/techfiles/tsmcn65_9lmT2.tf" -mw_reference_library "/cad/libs/tsmc65/digital/Back_End/milkyway/tcbn65lp_200a/frame_only/tcbn65lp" "LIB"
+
+open_mw_lib "LIB"
+check_library
+
+set_tlu_plus_files -max_tluplus "/cad/libs/tsmc65/digital/Back_End/milkyway/tcbn65lp_200a/techfiles/tluplus/cln65lp_1p09m+alrdl_rcworst_top2.tluplus" -min "/cad/libs/tsmc65/digital/Back_End/milkyway/tcbn65lp_200a/techfiles/tluplus/cln65lp_1p09m+alrdl_rcbest_top2.tluplus" -tech2itf_map "/cad/libs/tsmc65/digital/Back_End/milkyway/tcbn65lp_200a/techfiles/tluplus/star.map_9M"
+
+check_tlu_plus_files
 
 # turn on name mapping to help power analysis
 # saif_map -start
@@ -23,6 +33,7 @@ set_app_var link_library "
 source read_sources.tcl
 
 elaborate Core
+link
 check_design
 
 # create clocks
@@ -30,7 +41,7 @@ create_clock clk -name core_clk -period 2
 
 # compile (can try compile_ultra aswell)
 
-compile
+compile_ultra -gate_clock -no_autoungroup
 
 # we can generate power estimates by using a given converting a given vcd file to saif format
 # saif_map -create_map -input "../../sim/build/sort-rtl-struct-random.saif" -source_instance "TOP/v"

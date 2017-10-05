@@ -5,5 +5,7 @@ analyze -format sverilog ../../core/src/Register.sv
 analyze -format sverilog ../../core/src/Branch.sv 
 analyze -format sverilog ../../core/src/ControlPath.sv 
 analyze -format sverilog ../../core/src/DataPath.sv 
-analyze -format sverilog ../../core/src/RegisterFile.sv 
+analyze -format sverilog ../../core/src/RegisterFile.sv
+analyze -format sverilog ../../core/src/CSRFile.sv
+analyze -format sverilog ../../core/src/RegisterWE.sv  
 analyze -format sverilog ../../core/src/Core.sv

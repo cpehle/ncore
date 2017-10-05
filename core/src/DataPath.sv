@@ -92,10 +92,6 @@ module DataPath(
    logic [31:0]   mem_wb_data;
 
    // CSR wires
-   logic 	  csr_write_illegal;
-   logic 	  csr_system_illegal;
-   logic 	  csr_read_illegal;
-   logic 	  csr_stall;
    logic [31:0]   csr_rdata;
      
    // TODO
@@ -337,16 +333,12 @@ module DataPath(
       ms <= msn;
    end
 
-   CSRFile csr_file(.csr_cmd(ms.ctrl_csr_cmd),
+   CSRFile csr_file(.csr_cmd(ms.ctrl_csr_cmd),		    
 		    .csr(ms.inst[31:20]),
 		    .csr_wdata(ms.alu_out),
 		    /*AUTOINST*/
 		    // Outputs
 		    .csr_rdata		(csr_rdata[31:0]),
-		    .csr_stall		(csr_stall),
-		    .csr_read_illegal	(csr_read_illegal),
-		    .csr_write_illegal	(csr_write_illegal),
-		    .csr_system_illegal	(csr_system_illegal),
 		    // Inputs
 		    .clk		(clk));
    

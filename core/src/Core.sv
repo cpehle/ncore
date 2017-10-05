@@ -10,14 +10,13 @@ module Core(input clk,
    Bundle::ControlToData ctl;
    Bundle::DataToControl dat;
 
-   ControlPath c(/*AUTOINST*/
+   ControlPath c(.imem_out_res_valid	(imem_out.res_valid),
+		 .dmem_out_res_valid    (dmem_out.res_valid),
+		 /*AUTOINST*/
 		 // Interfaces
 		 .ctl			(ctl),
 		 .dat			(dat),
-		 .imem_out		(imem_out),
 		 .imem_in		(imem_in),
-		 .dmem_out		(dmem_out),
-		 .dmem_in		(dmem_in),
 		 // Inputs
 		 .clk			(clk),
 		 .reset			(reset));

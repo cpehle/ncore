@@ -3,15 +3,13 @@
 //@brief This implements the control path of the core.
 `include "Bundle.sv"
 `include "Instructions.sv"
-module ControlPath (
-                   input  clk,
+module ControlPath (input  clk,
                    input  reset,
                    output Bundle::ControlToData ctl,
                    input  Bundle::DataToControl dat,
-                   input  Bundle::MemoryOut imem_out,
+                   input  logic imem_out_res_valid,
                    output Bundle::MemoryIn imem_in,
-                   input  Bundle::MemoryOut dmem_out,
-                   output Bundle::MemoryIn dmem_in
+                   input  logic dmem_out_res_valid
 );
 
    typedef struct packed {
@@ -131,7 +129,7 @@ module ControlPath (
       branch_in.br_eq = dat.exe_br_eq;
       branch_in.br_lt = dat.exe_br_lt;
       branch_in.br_ltu = dat.exe_br_ltu;      
-      branch_in.imem_res_valid = imem_out.res_valid;
+      branch_in.imem_res_valid = imem_out_res_valid;
       dec_rs1_addr = dat.dec_inst[19:15];
       dec_rs2_addr = dat.dec_inst[24:20];
       dec_wb_addr = dat.dec_inst[11:7];
@@ -222,7 +220,7 @@ module ControlPath (
       end
    end
    
-   assign cmiss_stall = !imem_out.res_valid || !((dat.mem_ctrl_dmem_val && dmem_out.res_valid) || !dat.mem_ctrl_dmem_val);
+   assign cmiss_stall = !imem_out_res_valid || !((dat.mem_ctrl_dmem_val && dmem_out_res_valid) || !dat.mem_ctrl_dmem_val);
    always_comb begin
       if (1) begin
          hazard_stall = (exe_inst_is_load_reg && (sl.exe_reg_wbaddr == dec_rs1_addr) && dec_rs1_oen)
@@ -244,7 +242,7 @@ module ControlPath (
    /// Output
    always_comb begin
       ctl.dec_stall = hazard_stall;
-      ctl.cmiss_stall = !imem_out.res_valid || !((dat.mem_ctrl_dmem_val && dmem_out.res_valid) || !dat.mem_ctrl_dmem_val);
+      ctl.cmiss_stall = !imem_out_res_valid || !((dat.mem_ctrl_dmem_val && dmem_out_res_valid) || !dat.mem_ctrl_dmem_val);
       ctl.exe_pc_sel = branch_out.pc_sel;
       ctl.br_type = cs.br_type;
       ctl.if_kill = branch_out.if_kill;

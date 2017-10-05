@@ -5,15 +5,8 @@ module CSRFile(input clk,
 	       output logic [31:0] csr_rdata,
 	       input logic [31:0]  csr_wdata,
 	       // control signals
-	       output logic 	   csr_stall,
 	       // decode
-	       input logic [11:0]  csr,
-	       output logic 	   csr_read_illegal,
-	       output logic 	   csr_write_illegal,
-	       output logic 	   csr_system_illegal
-	       // output logic [31:0] current_time
-	       // input logic [31:0]  pc
-
+	       input logic [11:0]  csr
 ); 
    // Control Status Register File
    //
@@ -48,10 +41,5 @@ module CSRFile(input clk,
       endcase
    end // always_comb
 
-   RegisterWE #(.width(32)) test_reg(.clk(clk), .wen(csr_write && csr == 12'hf), .in(csr_wdata), .out(csr_rdata));
-   
-   assign csr_read_illegal = 1'b0;
-   assign csr_write_illegal = 1'b0;
-   assign csr_system_illegal = 1'b0;
-   assign csr_stall = 1'b0;   
+   RegisterWE #(.width(32)) test_reg(.clk(clk), .wen(csr_write && csr == 12'hf), .in(csr_wdata), .out(csr_rdata));   
 endmodule

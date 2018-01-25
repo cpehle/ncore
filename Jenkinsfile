@@ -1,7 +1,7 @@
 pipeline {
   agent any
   stages {
-    stage('prerequisites') {
+    stage('Prerequisites') {
       steps {
         sh '''# git clone --recursive https://github.com/riscv/riscv-gnu-toolchain
 '''
@@ -13,6 +13,17 @@ pipeline {
 # make install
 '''
         cleanWs(cleanWhenNotBuilt: true, cleanWhenAborted: true, cleanWhenFailure: true)
+      }
+    }
+    stage('Build') {
+      steps {
+        sh '''cd core/dv && make -f core.mk
+bazel build //core/dv:instruction_tests'''
+      }
+    }
+    stage('Test') {
+      steps {
+        sh 'bazel test //core/dv:instruction_tests'
       }
     }
   }

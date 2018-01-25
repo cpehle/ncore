@@ -12,7 +12,6 @@ pipeline {
 # ../configure --prefix=$RISCV --disable-linux --with-arch=rv32i
 # make install
 '''
-        cleanWs(cleanWhenNotBuilt: true, cleanWhenAborted: true, cleanWhenFailure: true)
       }
     }
     stage('Build') {

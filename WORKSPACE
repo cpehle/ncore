@@ -17,5 +17,5 @@ new_http_archive(
 git_repository(
     name = "verilator",
     remote = "https://github.com/cpehle/verilator",
-    commit = "eb5434b85e8dd3870f959c2b07bb230364ccf920",
+    commit = "7b821e5e8b6352f18591a56c29dfc147b157cdb2",
 )

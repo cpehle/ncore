@@ -12,7 +12,7 @@ before_install:
   - wget https://github.com/bazelbuild/bazel/releases/download/0.5.3/bazel_0.5.3-linux-x86_64.deb
   - sudo dpkg -i bazel_0.5.3-linux-x86_64.deb
 install:
-  - pushd . && wget https://www.veripool.org/ftp/verilator-3.904.tgz && tar xf verilator-3.904.tgz && cd verilator* && ./configure && make && sudo make install && popd
+  - pushd . && git clone http://git.veripool.org/git/verilator && cd verilator* && autoconf && ./configure && make && sudo make install && popd
 script:
   - cd core/dv && make -f core.mk && bazel test :instruction_tests
 
